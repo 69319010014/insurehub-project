@@ -16,9 +16,12 @@
     <a href="#" class="logo" onclick="showView('user')">PaloInSure_lnwza007</a>
     
     <div class="nav-actions">
-      <button class="btn-outline btn-sm nav-btn" id="navBtnUser" onclick="showView('user')">หน้าหลัก</button>
-      <button class="btn-outline btn-sm nav-btn" id="navBtnAgent" onclick="showView('agent')">จัดการพาร์ทเนอร์</button>
-      <button class="btn-outline btn-sm nav-btn" id="navBtnAdmin" onclick="showView('admin')">หน้าแอดมิน</button>
+      <button class="btn-outline btn-sm nav-btn active" id="navBtnUser" onclick="showView('user')">หน้าหลัก</button>
+      
+      <!-- ซ่อนปุ่มสองปุ่มนี้ไว้ก่อน โดยจะแสดงตามสิทธิ์ Role ตอนล็อกอิน -->
+      <button class="btn-outline btn-sm nav-btn" id="navBtnAgent" style="display: none;" onclick="showView('agent')">จัดการพาร์ทเนอร์</button>
+      <button class="btn-outline btn-sm nav-btn" id="navBtnAdmin" style="display: none;" onclick="showView('admin')">หน้าแอดมิน</button>
+      
       <button class="btn-outline btn-sm" onclick="openSponsorModal()">+ ยื่นคำขอพาร์ทเนอร์</button>
       
       <!-- ส่วนแสดงสถานะการล็อกอิน -->
@@ -91,7 +94,7 @@
     <div id="agent-tab-overview">
       <div class="dash-grid-4col">
         <div class="stat-card"><div>โควต้าการลงแผนประกัน</div><div class="val" id="agentQuotaDisplay">5 แผน</div></div>
-        <div class="stat-card"><div>แผนประกันที่เปิดใช้งาน</div><div class="val" id="agentActivePlansCount">0 แผน</div></div>
+        <div class="stat-card"><div>แผนประกันที่เปิดใช้งาน</div><div class="val" id="agentActivePlansCount">12 แผน</div></div>
         <div class="stat-card"><div>ลูกค้าร้องขอเสนอราคา (Leads)</div><div class="val" id="agentLeadsCount">0 รายการ</div></div>
       </div>
 
@@ -100,7 +103,7 @@
         <div class="table-responsive">
           <table>
             <thead>
-              <tr><th>#</th><th>ชื่อลูกค้า</th><th>เบอร์โทรศัพท์</th><th>แผนประกันที่สนใจ</th><th>วันที่ขอ</th></tr>
+              <tr><th>#</th><th>ชื่อลูกค้า</th><th>เบอร์โทรศัพท์</th><th>อีเมล</th><th>แผนประกันที่สนใจ</th><th>วันที่ขอ</th></tr>
             </thead>
             <tbody id="agentLeadsTable"></tbody>
           </table>
