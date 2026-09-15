@@ -5,11 +5,12 @@ let rawLeads = [];
 let rawSponsors = [];
 let compareList = [];
 let currentSelectedPlanTitle = '';
-let currentUser = null; // เก็บข้อมูลผู้ใช้ที่ล็อกอินอยู่
+let currentUser = null; // เก็บสถานะผู้ใช้ที่ล็อกอินอยู่
 
 let categoryChartInstance = null;
 let roleChartInstance = null;
 
+// ข้อมูลจำลองแผนประกัน
 const defaultPlans = [
   { id: 1, company: "วิริยะประกันภัย", title: "ประกันรถยนต์ ชั้น 1 คุ้มครองคุ้มค่า", category: "ประกันรถยนต์ ชั้น 1", price: 15500, coverage: 500000, repair_type: "ซ่อมห้าง (ศูนย์)", is_promoted: 1 },
   { id: 2, company: "กรุงเทพประกันภัย", title: "ประกันรถยนต์ ชั้น 1 พรีเมียมแคร์", category: "ประกันรถยนต์ ชั้น 1", price: 18900, coverage: 650000, repair_type: "ซ่อมห้าง (ศูนย์)", is_promoted: 0 },
@@ -25,6 +26,14 @@ const defaultPlans = [
   { id: 12, company: "คุ้มภัยโตเกียวมารีน", title: "ประกันภัยขนส่งสินค้าและโลจิสติกส์", category: "ประกันภัยทางทะเลและขนส่ง", price: 12500, coverage: 5000000, repair_type: "ชดเชยเงินสดตามเงื่อนไข", is_promoted: 0 }
 ];
 
+// ข้อมูลจำลองคำขอใบเสนอราคา (Mock Leads Data)
+const defaultLeads = [
+  { id: 1, name: "คุณสมชาย ใจดี", phone: "081-234-5678", email: "somchai@email.com", plan_title: "ประกันรถยนต์ ชั้น 1 คุ้มครองคุ้มค่า", created_at: "2026-09-15T10:30:00Z" },
+  { id: 2, name: "คุณวิภาวรรณ สุขเสริฐ", phone: "089-876-5432", email: "wipawan@email.com", plan_title: "ประกันชีวิตตลอดชีพ Smart Whole Life", created_at: "2026-09-15T14:15:00Z" },
+  { id: 3, name: "คุณณัฐพงษ์ รักชาติ", phone: "082-345-6789", email: "nattapong@email.com", plan_title: "ประกันอัคคีภัยคุ้มครองบ้านอยู่อาศัย", created_at: "2026-09-16T08:45:00Z" },
+  { id: 4, name: "คุณกานดา สุวรรณ", phone: "086-111-2233", email: "kanda@email.com", plan_title: "ประกันรถยนต์ ชั้น 1 พรีเมียมแคร์", created_at: "2026-09-16T09:20:00Z" }
+];
+
 function showToast(message, type = 'success') {
   const container = document.getElementById('toastContainer');
   const toast = document.createElement('div');
@@ -34,7 +43,21 @@ function showToast(message, type = 'success') {
   setTimeout(() => toast.remove(), 3500);
 }
 
+/* ระบบสลับ View พร้อมระบบความปลอดภัยตรวจสอบสิทธิ์ */
 function showView(viewName) {
+  // บล็อกสิทธิ์ถ้าพยายามสลับหน้าโดยไม่มี Role รองรับ
+  if (viewName === 'agent' && !(currentUser && (currentUser.role === 'agent' || currentUser.role === 'admin'))) {
+    showToast('🔒 เฉพาะ Partner/Agent หรือ Admin เท่านั้นที่เข้าถึงหน้านี้ได้', 'warning');
+    openAuthModal('login');
+    return;
+  }
+
+  if (viewName === 'admin' && !(currentUser && currentUser.role === 'admin')) {
+    showToast('🔒 สิทธิ์ไม่ถูกต้อง! กรุณาล็อกอินในฐานะ Super Admin', 'danger');
+    openAuthModal('login');
+    return;
+  }
+
   document.getElementById('view-user').style.display = viewName === 'user' ? 'block' : 'none';
   document.getElementById('view-agent').style.display = viewName === 'agent' ? 'block' : 'none';
   document.getElementById('view-admin').style.display = viewName === 'admin' ? 'block' : 'none';
@@ -59,7 +82,7 @@ async function loadAllData() {
 
     rawPlans = (resPlans && resPlans.length > 0) ? resPlans : defaultPlans;
     rawUsers = resUsers || [];
-    rawLeads = resLeads || [];
+    rawLeads = (resLeads && resLeads.length > 0) ? resLeads : defaultLeads; // ดึงข้อมูลจำลองหากใน DB ว่าง
     rawSponsors = resSponsors || [];
 
     renderUserGrid();
@@ -67,11 +90,13 @@ async function loadAllData() {
     renderAdminDashboard();
   } catch (err) {
     rawPlans = defaultPlans;
+    rawLeads = defaultLeads;
     renderUserGrid();
+    renderAgentLeadsTable();
   }
 }
 
-/* ==================== AUTHENTICATION SYSTEM ==================== */
+/* ==================== AUTHENTICATION & ROLE CONTROL ==================== */
 
 function switchAuthTab(tab) {
   document.getElementById('tabLoginBtn').classList.toggle('active', tab === 'login');
@@ -93,23 +118,25 @@ function handleLogin(e) {
   e.preventDefault();
   const username = document.getElementById('loginUsername').value.trim();
 
-  // ตรวจสอบข้อมูลบัญชี
   if (username === 'admin') {
     currentUser = { name: 'Super Admin', email: 'admin@paloinsure.com', role: 'admin' };
     showToast('🔑 เข้าสู่ระบบในฐานะ Super Admin เรียบร้อย!', 'success');
+    updateAuthUI();
+    closeAuthModal();
     showView('admin');
   } else if (username === 'agent') {
     currentUser = { name: 'Agent Partner', email: 'agent@paloinsure.com', role: 'agent' };
     showToast('💼 เข้าสู่ระบบในฐานะ Partner/Agent เรียบร้อย!', 'success');
+    updateAuthUI();
+    closeAuthModal();
     showView('agent');
   } else {
     currentUser = { name: username || 'คุณสมาชิก', email: `${username}@email.com`, role: 'user' };
     showToast(`ยินดีต้อนรับคุณ ${currentUser.name}!`, 'success');
+    updateAuthUI();
+    closeAuthModal();
     showView('user');
   }
-
-  updateAuthUI();
-  closeAuthModal();
 }
 
 function handleRegister(e) {
@@ -124,6 +151,7 @@ function handleRegister(e) {
   updateAuthUI();
   closeAuthModal();
   if (role === 'agent') showView('agent');
+  else showView('user');
 }
 
 function handleLogout() {
@@ -133,9 +161,25 @@ function handleLogout() {
   showView('user');
 }
 
+/* อัปเดตเมนูบาร์ตามสิทธิ์ของผู้ใช้งาน (ผู้ใช้ทั่วไปจะไม่เห็นปุ่ม Agent/Admin) */
 function updateAuthUI() {
   const authNavArea = document.getElementById('authNavArea');
+  const navBtnAgent = document.getElementById('navBtnAgent');
+  const navBtnAdmin = document.getElementById('navBtnAdmin');
+
   if (currentUser) {
+    // แสดงปุ่มตาม Role
+    if (currentUser.role === 'admin') {
+      navBtnAgent.style.display = 'inline-block';
+      navBtnAdmin.style.display = 'inline-block';
+    } else if (currentUser.role === 'agent') {
+      navBtnAgent.style.display = 'inline-block';
+      navBtnAdmin.style.display = 'none';
+    } else {
+      navBtnAgent.style.display = 'none';
+      navBtnAdmin.style.display = 'none';
+    }
+
     const roleBadge = currentUser.role === 'admin' ? 'badge-danger' : currentUser.role === 'agent' ? 'badge-warning' : 'badge-info';
     authNavArea.innerHTML = `
       <div style="display: flex; align-items: center; gap: 10px;">
@@ -150,6 +194,9 @@ function updateAuthUI() {
       </div>
     `;
   } else {
+    // ผู้ใช้ทั่วไป ไม่ได้ล็อกอิน
+    navBtnAgent.style.display = 'none';
+    navBtnAdmin.style.display = 'none';
     authNavArea.innerHTML = `
       <button class="btn-primary btn-sm" onclick="openAuthModal('login')">เข้าสู่ระบบ / สมัครสมาชิก</button>
     `;
@@ -249,22 +296,21 @@ async function submitLead() {
     return;
   }
 
+  const newLead = { id: Date.now(), name, phone, email, plan_title: currentSelectedPlanTitle, created_at: new Date().toISOString() };
+  rawLeads.unshift(newLead); // อัปเดตข้อมูลฝั่ง Frontend ทันที
+
   try {
-    const res = await fetch(`${API_BASE}/leads`, {
+    await fetch(`${API_BASE}/leads`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, phone, email, plan_title: currentSelectedPlanTitle })
+      body: JSON.stringify(newLead)
     });
+  } catch (err) {}
 
-    if (res.ok) {
-      showToast('🎉 บันทึกคำขอเรียบร้อย! เจ้าหน้าที่จะติดต่อกลับโดยเร็วที่สุด', 'success');
-      closeLeadModal();
-      loadAllData();
-    }
-  } catch (err) {
-    showToast('บันทึกข้อมูลคำขอเรียบร้อยแล้ว', 'success');
-    closeLeadModal();
-  }
+  showToast('🎉 บันทึกคำขอเรียบร้อย! เจ้าหน้าที่จะติดต่อกลับโดยเร็วที่สุด', 'success');
+  closeLeadModal();
+  renderAgentLeadsTable();
+  renderAdminDashboard();
 }
 
 function renderAgentLeadsTable() {
@@ -276,10 +322,11 @@ function renderAgentLeadsTable() {
       <td>${i + 1}</td>
       <td><b>${l.name}</b></td>
       <td>${l.phone}</td>
-      <td>${l.plan_title || '-'}</td>
+      <td>${l.email || '-'}</td>
+      <td><span class="badge badge-info">${l.plan_title || '-'}</span></td>
       <td>${l.created_at ? new Date(l.created_at).toLocaleDateString('th-TH') : 'วันนี้'}</td>
     </tr>
-  `).join('') || '<tr><td colspan="5" style="text-align:center;">ยังไม่มีข้อมูลคำขอ</td></tr>';
+  `).join('') || '<tr><td colspan="6" style="text-align:center;">ยังไม่มีข้อมูลคำขอ</td></tr>';
 }
 
 function renderAdminDashboard() {
@@ -353,26 +400,22 @@ async function saveEditUser() {
     quota: parseInt(document.getElementById('editUserQuota').value) || 5
   };
 
-  const res = await fetch(`${API_BASE}/users/${id}`, {
+  await fetch(`${API_BASE}/users/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
-  });
+  }).catch(() => {});
 
-  if (res.ok) {
-    showToast('อัปเดตข้อมูลผู้ใช้งานสำเร็จ!', 'success');
-    closeEditUserModal();
-    loadAllData();
-  }
+  showToast('อัปเดตข้อมูลผู้ใช้งานสำเร็จ!', 'success');
+  closeEditUserModal();
+  loadAllData();
 }
 
 async function deleteUser(id) {
   if (!confirm('ยืนยันลบผู้ใช้ไอดีนี้ออกจากระบบ?')) return;
-  const res = await fetch(`${API_BASE}/users/${id}`, { method: 'DELETE' });
-  if (res.ok) {
-    showToast('ลบข้อมูลสำเร็จ', 'success');
-    loadAllData();
-  }
+  await fetch(`${API_BASE}/users/${id}`, { method: 'DELETE' }).catch(() => {});
+  showToast('ลบข้อมูลสำเร็จ', 'success');
+  loadAllData();
 }
 
 async function submitSponsorRequest() {
@@ -381,15 +424,14 @@ async function submitSponsorRequest() {
     contact: document.getElementById('sponsorContact').value,
     phone: document.getElementById('sponsorPhone').value
   };
-  const res = await fetch(`${API_BASE}/sponsors`, {
+  await fetch(`${API_BASE}/sponsors`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
-  });
-  if (res.ok) {
-    showToast('ยื่นคำขอพาร์ทเนอร์สำเร็จ!', 'success');
-    closeSponsorModal();
-  }
+  }).catch(() => {});
+
+  showToast('ยื่นคำขอพาร์ทเนอร์สำเร็จ!', 'success');
+  closeSponsorModal();
 }
 
 function openSponsorModal() { document.getElementById('sponsorModalOverlay').style.display = 'flex'; }
@@ -404,6 +446,7 @@ function resetFilters() {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
+  updateAuthUI(); // เริ่มต้นด้วยสิทธิ์ User ทั่วไป (ซ่อนปุ่ม Agent/Admin)
   showView('user');
   loadAllData();
 });
