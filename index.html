@@ -1,0 +1,1249 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PaloInSure_lnwza007</title>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #1B4D3E;
+      --primary-hover: #143B2F;
+      --primary-light: #E8F0EC;
+      --bg-gray: #F8F9FA;
+      --card-bg: #FFFFFF;
+      --text-main: #0F172A;
+      --text-muted: #64748B;
+      --border: #E2E8F0;
+      --promoted-bg: #FEF3C7;
+      --promoted-text: #92400E;
+      --success: #16A34A;
+      --warning: #CA8A04;
+      --danger: #DC2626;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Prompt', sans-serif; }
+    body { background-color: var(--bg-gray); color: var(--text-main); min-height: 100vh; padding-bottom: 80px; }
+
+    #toastContainer { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+    .toast { background: white; border-left: 5px solid var(--primary); box-shadow: 0 4px 16px rgba(0,0,0,0.15); padding: 14px 20px; border-radius: 8px; font-weight: 500; font-size: 14px; animation: slideIn 0.3s ease; }
+    .toast.success { border-left-color: var(--success); }
+    .toast.danger { border-left-color: var(--danger); }
+    .toast.warning { border-left-color: var(--warning); }
+    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+    .navbar { background: white; border-bottom: 1px solid var(--border); padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 900; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
+    .brand { font-size: 22px; font-weight: 700; color: var(--primary); cursor: pointer; }
+    .btn-primary { background: var(--primary); color: white; padding: 10px 20px; border-radius: 8px; border: none; font-weight: 500; cursor: pointer; transition: 0.2s; }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-outline { background: white; color: var(--primary); border: 1px solid var(--primary); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 500; transition: 0.2s; }
+    .btn-outline:hover { background: var(--primary-light); }
+    .btn-danger { background: var(--danger); color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 500; }
+    .btn-warning { background: var(--warning); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 13px; }
+    .btn-sm { padding: 4px 8px; font-size: 12px; border-radius: 4px; }
+
+    .search-input { padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; width: 100%; outline: none; }
+    .search-input:focus { border-color: var(--primary); }
+
+    .container { max-width: 1200px; margin: 0 auto; padding: 24px 16px; }
+    .grid-2col { display: grid; grid-template-columns: 280px 1fr; gap: 24px; }
+
+    .filter-box { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 20px; height: fit-content; }
+    .filter-group { margin-bottom: 18px; }
+    .filter-group label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+    .filter-group select, .filter-group input { width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; outline: none; }
+
+    .card-grid { display: flex; flex-direction: column; gap: 16px; }
+    .card { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 20px; display: grid; grid-template-columns: 30px 180px 1fr 200px; gap: 16px; align-items: center; position: relative; }
+    .card.promoted { border: 2px solid var(--primary); background: #F4F8F6; }
+    .badge-promoted { position: absolute; top: -12px; left: 20px; background: var(--promoted-bg); color: var(--promoted-text); padding: 2px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+
+    .compare-drawer { position: fixed; bottom: -100px; left: 0; width: 100%; background: white; border-top: 2px solid var(--primary); box-shadow: 0 -4px 20px rgba(0,0,0,0.1); padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; transition: bottom 0.3s ease; z-index: 990; }
+    .compare-drawer.show { bottom: 0; }
+    .compare-items { display: flex; gap: 12px; flex-wrap: wrap; }
+    .compare-chip { background: var(--primary-light); padding: 6px 12px; border-radius: 20px; font-size: 13px; color: var(--primary); font-weight: 600; }
+
+    .dashboard-layout { display: grid; grid-template-columns: 240px 1fr; min-height: calc(100vh - 70px); }
+    .sidebar { background: white; border-right: 1px solid var(--border); padding: 24px; display: flex; flex-direction: column; justify-content: space-between; }
+    .sidebar-menu { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+    .sidebar-menu button { display: block; width: 100%; text-align: left; padding: 10px 14px; border-radius: 8px; border: none; background: transparent; color: var(--text-muted); font-size: 14px; cursor: pointer; font-weight: 500; }
+    .sidebar-menu button.active { background: var(--primary-light); color: var(--primary); font-weight: 600; }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+    .stat-card { background: white; padding: 20px; border-radius: 12px; border: 1px solid var(--border); }
+    .stat-num { font-size: 26px; font-weight: 700; color: var(--primary); margin-top: 6px; }
+
+    table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
+    th, td { padding: 12px 16px; text-align: left; font-size: 14px; border-bottom: 1px solid var(--border); }
+    th { background: #F1F5F9; color: var(--text-muted); font-weight: 600; }
+
+    .badge { padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; display: inline-block; }
+    .badge-success { background: #DCFCE7; color: var(--success); }
+    .badge-warning { background: #FEF9C3; color: var(--warning); }
+    .badge-danger { background: #FEE2E2; color: var(--danger); }
+    .badge-info { background: #E0F2FE; color: #0284C7; }
+
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 2000; }
+    .modal { background: white; border-radius: 12px; padding: 28px; width: 480px; max-width: 92%; max-height: 90vh; overflow-y: auto; }
+    .modal-lg { width: 900px; max-width: 95%; }
+    .modal input, .modal select { width: 100%; padding: 10px; margin: 8px 0 16px 0; border: 1px solid var(--border); border-radius: 6px; }
+
+    .auth-tab-btn { flex: 1; padding: 10px; border: none; background: #F1F5F9; font-weight: 600; cursor: pointer; color: var(--text-muted); border-radius: 8px; transition: 0.2s; }
+    .auth-tab-btn.active { background: var(--primary); color: white; }
+
+    footer { text-align: center; padding: 20px; color: var(--text-muted); font-size: 13px; border-top: 1px solid var(--border); margin-top: 40px; }
+
+    @media (max-width: 768px) {
+      .navbar { padding: 12px 16px; flex-direction: column; gap: 12px; align-items: flex-start; }
+      .grid-2col, .dashboard-layout { grid-template-columns: 1fr; }
+      .card { grid-template-columns: 1fr; gap: 10px; text-align: left; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .compare-drawer { flex-direction: column; gap: 12px; text-align: center; }
+      .table-responsive { overflow-x: auto; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="toastContainer"></div>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <div class="brand" onclick="showView('user')">PaloInSure_lnwza007</div>
+    <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+      <span id="navRoleLabel" style="font-size: 13px; color: var(--text-muted); font-weight: 500;"></span>
+      
+      <div id="adminNavControls" style="display: none; gap: 8px;">
+        <button class="btn-outline" onclick="showView('admin')">หน้าแอดมิน</button>
+        <button class="btn-outline" onclick="showView('agent')">จัดการพาร์ทเนอร์</button>
+      </div>
+
+      <!-- ปุ่มก่อนเข้าสู่ระบบ -->
+      <div id="guestNavControls" style="display: flex; gap: 8px;">
+        <button class="btn-outline" onclick="openAuthModal('register')">+ สมัครสมาชิก</button>
+        <button class="btn-primary" onclick="openAuthModal('login')">เข้าสู่ระบบ</button>
+      </div>
+
+      <!-- ปุ่มเมื่อเข้าสู่ระบบแล้ว -->
+      <div id="userLoggedInControls" style="display: none; gap: 8px; align-items: center;">
+        <span id="userNameDisplay" style="font-size: 14px; font-weight: 600; color: var(--primary);"></span>
+        <button class="btn-danger" onclick="logout()">ออกจากระบบ</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- 1. USER VIEW -->
+  <div id="view-user">
+    <div class="container">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+        <div>
+          <h2>ศูนย์รวมและเปรียบเทียบประกันภัย</h2>
+          <p style="color: var(--text-muted);">ข้อมูลเชื่อมต่อกับฐานข้อมูล PaloInSure_lnwza007 (SQLite Database)</p>
+        </div>
+        <button class="btn-outline" onclick="openSponsorModal()">+ ยื่นคำขอเป็นผู้สนับสนุน / พาร์ทเนอร์</button>
+      </div>
+
+      <div class="grid-2col">
+        <div class="filter-box">
+          <h3 style="margin-bottom: 16px; font-size: 16px;">🔍 ค้นหา & กรองข้อมูล</h3>
+          
+          <div class="filter-group">
+            <label>ค้นหาชื่อบริษัท / แผน</label>
+            <input type="text" id="filterSearch" placeholder="พิมพ์คำค้นหา..." oninput="renderUserGrid()">
+          </div>
+
+          <div class="filter-group">
+            <label>ประเภทประกัน</label>
+            <select id="filterType" class="form-select" onchange="renderUserGrid()">
+              <option value="all">-- ทั้งหมดทุกประเภทประกัน --</option>
+              
+              <optgroup label="ประกันยานพาหนะ">
+                <option value="ประกันรถยนต์ ชั้น 1">ประกันรถยนต์ ชั้น 1</option>
+              </optgroup>
+
+              <optgroup label="ประกันวินาศภัย">
+                <option value="ประกันอัคคีภัย">ประกันอัคคีภัย</option>
+                <option value="ประกันอุทกภัย">ประกันอุทกภัย</option>
+                <option value="ประกันภัยทางทะเลและขนส่ง">ประกันภัยทางทะเลและขนส่ง</option>
+              </optgroup>
+
+              <optgroup label="ประกันชีวิต">
+                <option value="ประกันชีวิตแบบตลอดชีพ">ประกันชีวิตแบบตลอดชีพ</option>
+                <option value="ประกันชีวิตแบบชั่วระยะเวลา">ประกันชีวิตแบบชั่วระยะเวลา</option>
+                <option value="ประกันชีวิตแบบสะสมทรัพย์">ประกันชีวิตสะสมทรัพย์</option>
+                <option value="ประกันชีวิตแบบบำนาญ">ประกันชีวิตแบบบำนาญ</option>
+                <option value="ประกันชีวิตควบการลงทุน (Unit-linked)">ประกันชีวิตควบการลงทุน</option>
+              </optgroup>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label>ประเภทการซ่อม</label>
+            <select id="filterRepair" onchange="renderUserGrid()">
+              <option value="all">ทั้งหมด</option>
+              <option value="ซ่อมห้าง (ศูนย์)">ซ่อมห้าง (ศูนย์)</option>
+              <option value="ซ่อมอู่">ซ่อมอู่</option>
+              <option value="ชดเชยเงินสดตามเงื่อนไข">ชดเชยเงินสดตามเงื่อนไข</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label>งบประมาณสูงสุด (บาท/ปี)</label>
+            <input type="number" id="filterPrice" placeholder="เช่น 20000" value="50000" oninput="renderUserGrid()">
+          </div>
+
+          <button class="btn-primary" style="width: 100%;" onclick="resetFilters()">ล้างตัวกรองทั้งหมด</button>
+        </div>
+
+        <div class="card-grid" id="insuranceGrid"></div>
+      </div>
+    </div>
+
+    <!-- Compare Drawer -->
+    <div id="compareDrawer" class="compare-drawer">
+      <div>
+        <span style="font-weight: 600; margin-right: 12px;">รายการเปรียบเทียบ (<span id="compareCount">0</span>/3):</span>
+        <span id="compareList" class="compare-items"></span>
+      </div>
+      <button class="btn-primary" onclick="openCompareModal()">เปิดตารางเปรียบเทียบแผน</button>
+    </div>
+
+    <footer>© 2026 PaloInSure_lnwza007 Platform with SQLite Database API</footer>
+  </div>
+
+  <!-- 2. PARTNER VIEW -->
+  <div id="view-agent" style="display: none;">
+    <div class="dashboard-layout">
+      <div class="sidebar">
+        <div>
+          <div class="brand" style="margin-bottom: 20px; font-size: 18px;">Partner Management</div>
+          <ul class="sidebar-menu">
+            <li><button id="agent-menu-1" class="active" onclick="switchAgentTab('overview')">ภาพรวม & สมาชิก</button></li>
+            <li><button id="agent-menu-2" onclick="switchAgentTab('manage-plans')">จัดการแผนประกัน</button></li>
+            <li><button id="agent-menu-3" onclick="switchAgentTab('plans')">เพิ่มแผนประกันใหม่</button></li>
+          </ul>
+        </div>
+        <button class="btn-outline" style="width: 100%; margin-top: 20px;" onclick="showView('user')">กลับหน้าหลัก</button>
+      </div>
+
+      <div class="container">
+        <div id="agent-tab-overview">
+          <h2>แดชบอร์ดพาร์ทเนอร์ และจัดการสมาชิกในดูแล</h2>
+          <div class="stats-grid" style="margin-top: 16px;">
+            <div class="stat-card"><span>แผนประกันในระบบ</span><div class="stat-num" id="totalPlansCount">0 แผน</div></div>
+            <div class="stat-card"><span>โควต้าแผนประกัน</span><div class="stat-num" style="color: var(--warning);">5 แผน</div></div>
+            <div class="stat-card"><span>สมาชิกในความดูแล</span><div class="stat-num" id="agentMemberCount">0 คน</div></div>
+            <div class="stat-card"><span>สิทธิ์การใช้งาน</span><div class="stat-num" style="color: var(--success); font-size: 18px; margin-top: 12px;">● พาร์ทเนอร์อนุมัติ</div></div>
+          </div>
+
+          <div style="background: white; border-radius: 12px; border: 1px solid var(--border); padding: 20px; margin-bottom: 24px;" class="table-responsive">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+              <h3>รายชื่อสมาชิกผู้ใช้งานในระบบ (Members)</h3>
+              <div style="display: flex; gap: 8px;">
+                <input type="text" id="searchMemberInput" class="search-input" style="width: 200px;" placeholder="🔍 ค้นหาชื่อ, อีเมล..." oninput="renderAgentMembersTable()">
+                <button class="btn-primary btn-sm" onclick="openCreateUserModal('user')">+ สร้างไอดีสมาชิก</button>
+              </div>
+            </div>
+            <table>
+              <thead><tr><th>ไอดี</th><th>ชื่อ-นามสกุล</th><th>อีเมล</th><th>เบอร์โทรศัพท์</th><th>สถานะสมาชิก</th><th>จัดการ</th></tr></thead>
+              <tbody id="agentMembersTable"></tbody>
+            </table>
+          </div>
+
+          <div style="background: white; border-radius: 12px; border: 1px solid var(--border); padding: 20px;" class="table-responsive">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <h3>รายชื่อลูกค้าที่สนใจขอใบเสนอราคา (Leads)</h3>
+              <input type="text" id="searchLeadInput" class="search-input" style="width: 250px;" placeholder="🔍 ค้นหาชื่อลูกค้า, เบอร์โทร..." oninput="renderLeadsTable()">
+            </div>
+            <table>
+              <thead><tr><th>วันที่</th><th>ชื่อลูกค้า</th><th>เบอร์โทร</th><th>แผนประกันที่สนใจ</th><th>สถานะ</th></tr></thead>
+              <tbody id="agentLeadTable"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="agent-tab-manage-plans" style="display: none;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2>รายการแผนประกันภัยในระบบ</h2>
+            <button class="btn-primary" onclick="switchAgentTab('plans')">+ เพิ่มแผนประกันใหม่</button>
+          </div>
+          <div style="background: white; border-radius: 12px; border: 1px solid var(--border); padding: 20px;" class="table-responsive">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+              <h3>ตารางจัดการแผนประกันภัย</h3>
+              <input type="text" id="searchPlanInput" class="search-input" style="width: 250px;" placeholder="🔍 ค้นหาบริษัท, ชื่อแผน..." oninput="renderAgentPlansManageTable()">
+            </div>
+            <table>
+              <thead><tr><th>ไอดี</th><th>บริษัท</th><th>ชื่อแผน</th><th>เบี้ยประกัน/ปี</th><th>ทุนประกัน</th><th>ประเภทซ่อม</th><th>สถานะ</th><th>จัดการ</th></tr></thead>
+              <tbody id="agentPlansManageTable"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- แท็บเพิ่มแผนประกันภัยใหม่ -->
+        <div id="agent-tab-plans" style="display: none;">
+          <h2>เพิ่มแผนประกันภัยใหม่ลงใน PaloInSure_lnwza007</h2>
+          <div style="background: white; border-radius: 12px; border: 1px solid var(--border); padding: 24px; max-width: 600px; margin-top: 16px;">
+            
+            <!-- 1. ประเภทประกัน -->
+            <div class="filter-group">
+              <label>ประเภทประกัน</label>
+              <select id="newCategory">
+                <option value="ประกันรถยนต์ ชั้น 1">ประกันรถยนต์ ชั้น 1</option>
+                <optgroup label="ประกันวินาศภัย">
+                  <option value="ประกันอัคคีภัย">ประกันอัคคีภัย</option>
+                  <option value="ประกันอุทกภัย">ประกันอุทกภัย</option>
+                  <option value="ประกันภัยทางทะเลและขนส่ง">ประกันภัยทางทะเลและขนส่ง</option>
+                </optgroup>
+                <optgroup label="ประกันชีวิต">
+                  <option value="ประกันชีวิตแบบตลอดชีพ">ประกันชีวิตแบบตลอดชีพ</option>
+                  <option value="ประกันชีวิตแบบชั่วระยะเวลา">ประกันชีวิตแบบชั่วระยะเวลา</option>
+                  <option value="ประกันชีวิตสะสมทรัพย์">ประกันชีวิตสะสมทรัพย์</option>
+                  <option value="ประกันชีวิตแบบบำนาญ">ประกันชีวิตแบบบำนาญ</option>
+                  <option value="ประกันชีวิตควบการลงทุน (Unit-linked)">ประกันชีวิตควบการลงทุน (Unit-linked)</option>
+                </optgroup>
+              </select>
+            </div>
+
+            <!-- 2. บริษัทประกันภัย -->
+            <div class="filter-group">
+              <label>บริษัทประกันภัย</label>
+              <input type="text" id="newCompany" placeholder="ระบุชื่อบริษัทประกันภัย">
+            </div>
+
+            <!-- 3. ชื่อแผนประกัน -->
+            <div class="filter-group">
+              <label>ชื่อแผนประกัน</label>
+              <input type="text" id="newTitle" placeholder="ระบุชื่อแผนประกัน">
+            </div>
+
+            <!-- 4. เบี้ยประกันภัยต่อปี (บาท) -->
+            <div class="filter-group">
+              <label>เบี้ยประกันภัยต่อปี (บาท)</label>
+              <input type="number" id="newPrice" placeholder="เช่น 15000">
+            </div>
+
+            <!-- 5. ทุนประกันภัย (บาท) -->
+            <div class="filter-group">
+              <label>ทุนประกันภัย (บาท)</label>
+              <input type="number" id="newCoverage" placeholder="เช่น 500000">
+            </div>
+
+            <!-- 6. ประเภทการซ่อม / การชดเชย -->
+            <div class="filter-group">
+              <label>ประเภทการซ่อม / การชดเชย</label>
+              <select id="newRepair">
+                <option value="ซ่อมห้าง (ศูนย์)">ซ่อมห้าง (ศูนย์)</option>
+                <option value="ซ่อมอู่">ซ่อมอู่</option>
+                <option value="ชดเชยเงินสดตามเงื่อนไข">ชดเชยเงินสดตามเงื่อนไข</option>
+              </select>
+            </div>
+
+            <button class="btn-primary" style="width: 100%;" onclick="addNewInsurancePlan()">บันทึกลงในเว็ปไซต์</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. ADMIN VIEW -->
+  <div id="view-admin" style="display: none;">
+    <div class="dashboard-layout">
+      <div class="sidebar">
+        <div>
+          <div class="brand" style="margin-bottom: 20px; font-size: 18px;">Super Admin</div>
+          <ul class="sidebar-menu">
+            <li><button id="admin-menu-1" class="active" onclick="switchAdminTab('overview')">ภาพรวม & สถิติ</button></li>
+            <li><button id="admin-menu-2" onclick="switchAdminTab('users')">จัดการผู้ใช้งาน & มอบสิทธิ์</button></li>
+            <li><button id="admin-menu-3" onclick="switchAdminTab('sponsors')">คำขอผู้สนับสนุน / พาร์ทเนอร์</button></li>
+            <li><button id="admin-menu-4" onclick="switchAdminTab('pending-plans')">อนุมัติแผนประกันภัย (<span id="adminPendingPlansBadge">0</span>)</button></li>
+          </ul>
+        </div>
+        <button class="btn-outline" style="width: 100%; margin-top: 20px;" onclick="showView('user')">กลับหน้าหลัก</button>
+      </div>
+
+      <div class="container">
+        <div id="admin-tab-overview">
+          <h2>ระบบหลังบ้านและสถิติเว็บ</h2>
+          <div class="stats-grid" style="margin-top: 16px;">
+            <div class="stat-card"><span>ผู้เข้าชมทั้งหมด</span><div class="stat-num">24,580 คน</div></div>
+            <div class="stat-card"><span>ผู้ใช้งานใน DB</span><div class="stat-num" id="adminTotalUsersCount">0 คน</div></div>
+            <div class="stat-card"><span>คำขอผู้สนับสนุน</span><div class="stat-num" id="adminPendingSponsors" style="color: var(--warning);">0 รายการ</div></div>
+            <div class="stat-card"><span>แผนประกันใน DB</span><div class="stat-num" id="adminTotalPlans">0 แผน</div></div>
+          </div>
+        </div>
+
+        <div id="admin-tab-users" style="display: none;">
+          <h2>จัดการผู้ใช้งาน และกำหนดสิทธิ์พาร์ทเนอร์</h2>
+          <div style="background: white; border-radius: 12px; border: 1px solid var(--border); padding: 20px; margin-top: 16px;" class="table-responsive">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+              <h3>รายชื่อผู้ใช้งานทั้งหมดใน Database</h3>
+              <div style="display: flex; gap: 8px;">
+                <input type="text" id="searchUserAdminInput" class="search-input" style="width: 200px;" placeholder="🔍 ค้นหาชื่อ, อีเมล..." oninput="renderAdminUsersTable()">
+                <button class="btn-primary btn-sm" onclick="openCreateUserModal('agent')">+ สร้างไอดีผู้ใช้/พาร์ทเนอร์</button>
+              </div>
+            </div>
+            <table>
+              <thead><tr><th>ไอดี</th><th>ชื่อผู้ใช้</th><th>อีเมล</th><th>เบอร์โทร</th><th>ระดับสิทธิ์</th><th>โควต้า</th><th>สถานะ</th><th>จัดการ</th></tr></thead>
+              <tbody id="adminUsersTable"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="admin-tab-sponsors" style="display: none;">
+          <h2>จัดการคำขอผู้สนับสนุน (Sponsor Requests)</h2>
+          <div style="background: white; border-radius: 12px; border: 1px solid var(--border); padding: 20px; margin-top: 16px;" class="table-responsive">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+              <h3>รายการคำขอเป็นผู้สนับสนุน</h3>
+              <input type="text" id="searchSponsorInput" class="search-input" style="width: 250px;" placeholder="🔍 ค้นหาบริษัท, ผู้ติดต่อ..." oninput="renderAdminSponsorsTable()">
+            </div>
+            <table>
+              <thead><tr><th>วันที่</th><th>บริษัท</th><th>ผู้ติดต่อ</th><th>เบอร์โทร</th><th>ข้อความ</th><th>สถานะ</th><th>การอนุมัติ</th></tr></thead>
+              <tbody id="adminSponsorsTable"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- แท็บอนุมัติแผนประกันภัยสำหรับ Admin -->
+        <div id="admin-tab-pending-plans" style="display: none;">
+          <h2>อนุมัติแผนประกันภัยใหม่ (Pending Approvals)</h2>
+          <div style="background: white; border-radius: 12px; border: 1px solid var(--border); padding: 20px; margin-top: 16px;" class="table-responsive">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <h3>รายการแผนประกันที่รอการอนุมัติก่อนแสดงบนเว็บไซต์</h3>
+              <input type="text" id="searchPendingPlanInput" class="search-input" style="width: 250px;" placeholder="🔍 ค้นหาบริษัท, ชื่อแผน..." oninput="renderAdminPendingPlansTable()">
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>ไอดี</th>
+                  <th>บริษัท</th>
+                  <th>ชื่อแผน</th>
+                  <th>ประเภทประกัน</th>
+                  <th>เบี้ยประกัน/ปี</th>
+                  <th>ทุนประกัน</th>
+                  <th>ประเภทการซ่อม</th>
+                  <th>สถานะ</th>
+                  <th>จัดการอนุมัติ</th>
+                </tr>
+              </thead>
+              <tbody id="adminPendingPlansTable"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- MODALS -->
+  <div id="authModalOverlay" class="modal-overlay">
+    <div class="modal">
+      <div style="display: flex; gap: 8px; margin-bottom: 20px;">
+        <button id="tabBtnLogin" class="auth-tab-btn active" onclick="switchAuthTab('login')">เข้าสู่ระบบ</button>
+        <button id="tabBtnRegister" class="auth-tab-btn" onclick="switchAuthTab('register')">สมัครสมาชิกใหม่</button>
+      </div>
+
+      <div id="formLoginBlock">
+        <div style="background: #F1F5F9; padding: 12px; border-radius: 8px; font-size: 12px; margin-bottom: 16px; border: 1px solid var(--border);">
+          <b>ทดสอบสิทธิ์เจ้าหน้าที่:</b><br>
+          • <b>แอดมิน:</b> User: <code>admin</code> | Pass: <code>admin123</code><br>
+          • <b>พาร์ทเนอร์:</b> User: <code>agent</code> | Pass: <code>1234</code><br>
+          • <b>สมาชิกทั่วไป:</b> ใช้อีเมล / เบอร์โทรศัพท์ ที่สมัครได้ทันที
+        </div>
+        <div class="filter-group"><label>อีเมล / เบอร์โทรศัพท์ / Username</label><input type="text" id="loginUsername" placeholder="กรอกอีเมลหรือเบอร์โทร"></div>
+        <div class="filter-group"><label>รหัสผ่าน</label><input type="password" id="loginPassword" placeholder="กรอกรหัสผ่าน"></div>
+        <button class="btn-primary" style="width: 100%;" onclick="processUnifiedLogin()">เข้าสู่ระบบ</button>
+      </div>
+
+      <div id="formRegisterBlock" style="display: none;">
+        <div class="filter-group"><label>ชื่อ-นามสกุล</label><input type="text" id="regName" placeholder="เช่น นายสมชาย ใจดี"></div>
+        <div class="filter-group"><label>อีเมล</label><input type="email" id="regEmail" placeholder="somchai@example.com"></div>
+        <div class="filter-group"><label>เบอร์โทรศัพท์</label><input type="tel" id="regPhone" placeholder="0812345678"></div>
+        <div class="filter-group"><label>ตั้งรหัสผ่าน</label><input type="password" id="regPassword" placeholder="อย่างน้อย 4 ตัวอักษร"></div>
+        <button class="btn-primary" style="width: 100%;" onclick="processUserRegister()">ยืนยันสมัครสมาชิก</button>
+      </div>
+      <button style="width: 100%; margin-top: 12px; background: transparent; border: none; cursor: pointer; color: var(--text-muted);" onclick="closeAuthModal()">ยกเลิก</button>
+    </div>
+  </div>
+
+  <div id="createUserModalOverlay" class="modal-overlay">
+    <div class="modal">
+      <h3 style="margin-bottom: 16px;">สร้างไอดีสมาชิก / พาร์ทเนอร์ใหม่</h3>
+      <div class="filter-group"><label>ชื่อ-นามสกุล</label><input type="text" id="createUserName" placeholder="นายสมชาย ใจดี"></div>
+      <div class="filter-group"><label>อีเมล</label><input type="email" id="createUserEmail" placeholder="somchai@example.com"></div>
+      <div class="filter-group"><label>เบอร์โทรศัพท์</label><input type="tel" id="createUserPhone" placeholder="0812345678"></div>
+      <div class="filter-group"><label>รหัสผ่าน</label><input type="password" id="createUserPassword" placeholder="ตั้งรหัสผ่าน"></div>
+      <div class="filter-group">
+        <label>ระดับสิทธิ์ (Role)</label>
+        <select id="createUserRole">
+          <option value="user">User (สมาชิกทั่วไป)</option>
+          <option value="agent">Agent / Partner (พาร์ทเนอร์)</option>
+          <option value="admin">Super Admin (ผู้ดูแลระบบ)</option>
+        </select>
+      </div>
+      <div class="filter-group"><label>โควต้าแผนประกัน</label><input type="number" id="createUserQuota" value="5"></div>
+      <button class="btn-primary" style="width: 100%;" onclick="saveNewUser()">สร้างไอดีลง Database</button>
+      <button style="width: 100%; margin-top: 8px; background: transparent; border: none; cursor: pointer;" onclick="closeCreateUserModal()">ยกเลิก</button>
+    </div>
+  </div>
+
+  <div id="editUserModalOverlay" class="modal-overlay">
+    <div class="modal">
+      <h3 style="margin-bottom: 16px;">แก้ไขข้อมูลสมาชิก / พาร์ทเนอร์</h3>
+      <input type="hidden" id="editUserId">
+      <div class="filter-group"><label>ชื่อ-นามสกุล</label><input type="text" id="editUserName"></div>
+      <div class="filter-group"><label>อีเมล</label><input type="email" id="editUserEmail"></div>
+      <div class="filter-group"><label>เบอร์โทรศัพท์</label><input type="tel" id="editUserPhone"></div>
+      <div class="filter-group">
+        <label>ระดับสิทธิ์ (Role)</label>
+        <select id="editUserRole">
+          <option value="user">User (สมาชิกทั่วไป)</option>
+          <option value="agent">Agent / Partner (พาร์ทเนอร์)</option>
+          <option value="admin">Super Admin (ผู้ดูแลระบบ)</option>
+        </select>
+      </div>
+      <div class="filter-group"><label>โควต้าแผนประกัน</label><input type="number" id="editUserQuota"></div>
+      <div class="filter-group">
+        <label>สถานะ</label>
+        <select id="editUserStatus">
+          <option value="active">เปิดใช้งาน (Active)</option>
+          <option value="suspended">ระงับใช้งาน (Suspended)</option>
+        </select>
+      </div>
+      <button class="btn-primary" style="width: 100%;" onclick="saveEditUser()">บันทึกการแก้ไข</button>
+      <button style="width: 100%; margin-top: 8px; background: transparent; border: none; cursor: pointer;" onclick="closeEditUserModal()">ยกเลิก</button>
+    </div>
+  </div>
+
+  <div id="compareModalOverlay" class="modal-overlay">
+    <div class="modal modal-lg">
+      <h3 style="margin-bottom: 16px;">ตารางเปรียบเทียบแผนประกันภัย</h3>
+      <div id="compareTableContainer" class="table-responsive"></div>
+      <button class="btn-outline" style="width: 100%; margin-top: 16px;" onclick="closeCompareModal()">ปิดหน้าต่าง</button>
+    </div>
+  </div>
+
+  <div id="sponsorModalOverlay" class="modal-overlay">
+    <div class="modal">
+      <h3>ยื่นคำขอเป็นผู้สนับสนุน / พาร์ทเนอร์</h3>
+      <div class="filter-group"><label>บริษัท</label><input type="text" id="spCompany"></div>
+      <div class="filter-group"><label>ชื่อผู้ติดต่อ</label><input type="text" id="spContactName"></div>
+      <div class="filter-group"><label>เบอร์โทร</label><input type="tel" id="spPhone"></div>
+      <div class="filter-group"><label>รายละเอียด</label><input type="text" id="spNote"></div>
+      <button class="btn-primary" style="width: 100%;" onclick="submitSponsorRequest()">ส่งคำขอสปอนเซอร์</button>
+      <button style="width: 100%; margin-top: 8px; background: transparent; border: none; cursor: pointer;" onclick="closeSponsorModal()">ยกเลิก</button>
+    </div>
+  </div>
+
+  <div id="leadModalOverlay" class="modal-overlay">
+    <div class="modal">
+      <h3 id="modalTitle">ขอใบเสนอราคา</h3>
+      <input type="text" id="custName" placeholder="ชื่อ-นามสกุล">
+      <input type="tel" id="custPhone" placeholder="เบอร์โทรศัพท์">
+      <button class="btn-primary" style="width: 100%;" onclick="submitLeadModal()">ยืนยันส่งข้อมูล</button>
+      <button style="width: 100%; margin-top: 8px; background: transparent; border: none; cursor: pointer;" onclick="closeLeadModal()">ยกเลิก</button>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = 'http://localhost:3000/api';
+    let currentUser = null;
+    let rawPlans = [], rawUsers = [], rawLeads = [], rawSponsors = [];
+    let compareIds = [];
+    let activeLeadPlan = '';
+
+    function getCategoryName(category) {
+      const categories = {
+        'car1': 'ประกันรถยนต์ ชั้น 1',
+        'fire': 'ประกันอัคคีภัย',
+        'flood': 'ประกันอุทกภัย',
+        'marine': 'ประกันภัยทางทะเลและขนส่ง',
+        'life_whole': 'ประกันชีวิตแบบตลอดชีพ',
+        'life_term': 'ประกันชีวิตแบบชั่วระยะเวลา',
+        'life_saving': 'ประกันชีวิตสะสมทรัพย์',
+        'life_annuity': 'ประกันชีวิตแบบบำนาญ',
+        'life_linked': 'ประกันชีวิตควบการลงทุน'
+      };
+      return categories[category] || category;
+    }
+
+    function showToast(msg, type = 'success') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.innerText = msg;
+      container.appendChild(toast);
+      setTimeout(() => { toast.remove(); }, 3000);
+    }
+
+    async function loadAllData() {
+      try {
+        const [resPlans, resUsers, resLeads, resSponsors] = await Promise.all([
+          fetch(`${API_URL}/plans`),
+          fetch(`${API_URL}/users`),
+          fetch(`${API_URL}/leads`),
+          fetch(`${API_URL}/sponsors`)
+        ]);
+
+        rawPlans = await resPlans.json();
+        rawUsers = await resUsers.json();
+        rawLeads = await resLeads.json();
+        rawSponsors = await resSponsors.json();
+      } catch (err) {
+        // Fallback mock data หากยังไม่ได้รัน SQLite API
+        initMockData();
+      }
+      renderUserGrid();
+      renderAgentMembersTable();
+      renderLeadsTable();
+      renderAgentPlansManageTable();
+      renderAdminUsersTable();
+      renderAdminSponsorsTable();
+      renderAdminPendingPlansTable();
+      updateStats();
+    }
+
+    function initMockData() {
+      if (rawPlans.length === 0) {
+        rawPlans = [
+          { id: 1, company: 'วิริยะประกันภัย', title: 'ประกันรถยนต์ ชั้น 1 Pro', category: 'ประกันรถยนต์ ชั้น 1', price: 15500, coverage: 500000, repair: 'ซ่อมห้าง (ศูนย์)', status: 'approved', isPromoted: true },
+          { id: 2, company: 'กรุงเทพประกันภัย', title: 'ประกันอัคคีภัย คุ้มครองบ้าน 360', category: 'ประกันอัคคีภัย', price: 2800, coverage: 2000000, repair: 'ชดเชยเงินสดตามเงื่อนไข', status: 'approved' },
+          { id: 3, company: 'เอไอเอ (AIA)', title: 'ประกันชีวิตตลอดชีพ 99/20', category: 'ประกันชีวิตแบบตลอดชีพ', price: 24000, coverage: 1000000, repair: 'ชดเชยเงินสดตามเงื่อนไข', status: 'approved' },
+          { id: 4, company: 'เมืองไทยประกันภัย', title: 'ประกันรถยนต์ ชั้น 1 สบายใจ', category: 'ประกันรถยนต์ ชั้น 1', price: 12900, coverage: 400000, repair: 'ซ่อมอู่', status: 'pending' }
+        ];
+      }
+      if (rawUsers.length === 0) {
+        rawUsers = [
+          { id: 101, name: 'นายสมชาย ใจดี', email: 'somchai@gmail.com', phone: '0812345678', role: 'user', status: 'active', quota: 5 },
+          { id: 102, name: 'พาร์ทเนอร์ ตัวแทนประกัน', email: 'agent@insure.com', phone: '0898765432', role: 'agent', status: 'active', quota: 10 }
+        ];
+      }
+    }
+
+    // ฟังก์ชันเพิ่มแผนประกันภัยใหม่ (สถานะสเปกเป็น pending รอแอดมินอนุมัติ)
+    async function addNewInsurancePlan() {
+      const category = document.getElementById('newCategory').value;
+      const company = document.getElementById('newCompany').value.trim();
+      const title = document.getElementById('newTitle').value.trim();
+      const price = parseFloat(document.getElementById('newPrice').value);
+      const coverage = parseFloat(document.getElementById('newCoverage').value);
+      const repair = document.getElementById('newRepair').value;
+
+      if (!company || !title || isNaN(price) || isNaN(coverage)) {
+        showToast('กรุณากรอกข้อมูลแผนประกันภัยให้ครบถ้วน', 'warning');
+        return;
+      }
+
+      const newPlan = {
+        category,
+        company,
+        title,
+        name: title,
+        price,
+        coverage,
+        repair,
+        repair_type: repair,
+        status: 'pending', // ต้องให้แอดมินอนุมัติก่อน
+        createdAt: new Date().toISOString()
+      };
+
+      try {
+        const res = await fetch(`${API_URL}/plans`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newPlan)
+        });
+        if (res.ok) {
+          const created = await res.json();
+          rawPlans.push(created);
+        } else {
+          newPlan.id = Date.now();
+          rawPlans.push(newPlan);
+        }
+      } catch (err) {
+        newPlan.id = Date.now();
+        rawPlans.push(newPlan);
+      }
+
+      showToast('บันทึกแผนประกันสำเร็จ! (รอ Admin อนุมัติก่อนลงแสดงบนหน้าเว็บไซต์)', 'success');
+
+      // ล้างข้อมูลฟอร์ม
+      document.getElementById('newCompany').value = '';
+      document.getElementById('newTitle').value = '';
+      document.getElementById('newPrice').value = '';
+      document.getElementById('newCoverage').value = '';
+
+      loadAllData();
+      switchAgentTab('manage-plans');
+    }
+
+    // ฟังก์ชันสำหรับ Admin ในการอนุมัติ / ปฏิเสธแผนประกัน
+    async function approvePlan(planId) {
+      const plan = rawPlans.find(p => p.id == planId);
+      if (plan) {
+        plan.status = 'approved';
+        try {
+          await fetch(`${API_URL}/plans/${planId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(plan)
+          });
+        } catch(e){}
+        showToast('อนุมัติแผนประกันเรียบร้อยแล้ว! ข้อมูลจะแสดงบนเว็บไซต์ทันที', 'success');
+        loadAllData();
+      }
+    }
+
+    async function rejectPlan(planId) {
+      const plan = rawPlans.find(p => p.id == planId);
+      if (plan) {
+        plan.status = 'rejected';
+        try {
+          await fetch(`${API_URL}/plans/${planId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(plan)
+          });
+        } catch(e){}
+        showToast('ปฏิเสธแผนประกันเรียบร้อยแล้ว', 'warning');
+        loadAllData();
+      }
+    }
+
+    // แสดงผล User Grid (กรองเฉพาะแผนที่อนุมัติแล้วเท่านั้น)
+    function renderUserGrid() {
+      const grid = document.getElementById('insuranceGrid');
+      if (!grid) return;
+      grid.innerHTML = '';
+
+      const search = (document.getElementById('filterSearch')?.value || '').toLowerCase().trim();
+      const type = document.getElementById('filterType')?.value || 'all';
+      const repair = document.getElementById('filterRepair')?.value || 'all';
+      const price = parseFloat(document.getElementById('filterPrice')?.value) || Infinity;
+
+      const filtered = rawPlans.filter(p => {
+        // กรองเฉพาะสถานะ approved หรือแผนเดิมที่ไม่มี status
+        const isApproved = !p.status || p.status === 'approved';
+        if (!isApproved) return false;
+
+        const matchSearch = !search || (p.company || '').toLowerCase().includes(search) || (p.title || p.name || '').toLowerCase().includes(search);
+        const matchType = type === 'all' || p.category === type;
+        const matchRepair = repair === 'all' || (p.repair || p.repair_type || '').includes(repair);
+        const matchPrice = (p.price || 0) <= price;
+
+        return matchSearch && matchType && matchRepair && matchPrice;
+      });
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `<div style="text-align:center; padding: 40px; background: white; border-radius: 12px; color: var(--text-muted); width: 100%;">ไม่พบแผนประกันภัยที่ได้รับการอนุมัติในระบบ</div>`;
+        return;
+      }
+
+      filtered.forEach(plan => {
+        const isChecked = compareIds.includes(plan.id) ? 'checked' : '';
+        const planName = plan.title || plan.name || 'แผนประกันภัย';
+        const cardHtml = `
+          <div class="card ${plan.isPromoted ? 'promoted' : ''}">
+            ${plan.isPromoted ? '<span class="badge-promoted">แนะนำพิเศษ</span>' : ''}
+            <div>
+              <input type="checkbox" onchange="toggleCompare(${plan.id})" ${isChecked}>
+            </div>
+            <div>
+              <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;">${plan.company}</span>
+              <h4 style="font-size: 16px; margin: 4px 0; color: var(--primary);">${planName}</h4>
+              <span class="badge badge-info">${getCategoryName(plan.category)}</span>
+            </div>
+            <div>
+              <div style="font-size: 13px; color: var(--text-muted);">ทุนประกันภัย: <b style="color: var(--text-main);">${Number(plan.coverage).toLocaleString()} บาท</b></div>
+              <div style="font-size: 13px; color: var(--text-muted);">ประเภทการซ่อม: <b>${plan.repair || plan.repair_type || '-'}</b></div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 20px; font-weight: 700; color: var(--primary);">${Number(plan.price).toLocaleString()} <span style="font-size: 12px; font-weight: 400;">บาท/ปี</span></div>
+              <button class="btn-primary btn-sm" style="margin-top: 8px; width: 100%;" onclick="openLeadModal('${planName}')">ขอใบเสนอราคา</button>
+            </div>
+          </div>
+        `;
+        grid.innerHTML += cardHtml;
+      });
+    }
+
+    // แสดงตารางคำขออนุมัติใน Admin
+    function renderAdminPendingPlansTable() {
+      const tbody = document.getElementById('adminPendingPlansTable');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      const search = (document.getElementById('searchPendingPlanInput')?.value || '').toLowerCase().trim();
+      const pendingPlans = rawPlans.filter(p => p.status === 'pending' && (!search || (p.company || '').toLowerCase().includes(search) || (p.title || p.name || '').toLowerCase().includes(search)));
+
+      const badgeEl = document.getElementById('adminPendingPlansBadge');
+      if (badgeEl) badgeEl.innerText = pendingPlans.length;
+
+      if (pendingPlans.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: var(--text-muted);">ไม่มีรายการแผนประกันที่รออนุมัติ</td></tr>`;
+        return;
+      }
+
+      pendingPlans.forEach(plan => {
+        tbody.innerHTML += `
+          <tr>
+            <td>#${plan.id || '-'}</td>
+            <td><b>${plan.company}</b></td>
+            <td>${plan.title || plan.name}</td>
+            <td><span class="badge badge-info">${getCategoryName(plan.category)}</span></td>
+            <td><b>${Number(plan.price).toLocaleString()} บาท</b></td>
+            <td>${Number(plan.coverage).toLocaleString()} บาท</td>
+            <td>${plan.repair || plan.repair_type || '-'}</td>
+            <td><span class="badge badge-warning">รอแอดมินอนุมัติ</span></td>
+            <td>
+              <button class="btn-primary btn-sm" onclick="approvePlan(${plan.id})">✓ อนุมัติ</button>
+              <button class="btn-danger btn-sm" style="margin-left: 4px;" onclick="rejectPlan(${plan.id})">✕ ปฏิเสธ</button>
+            </td>
+          </tr>
+        `;
+      });
+    }
+
+    function renderAgentPlansManageTable() {
+      const tbody = document.getElementById('agentPlansManageTable');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      const search = (document.getElementById('searchPlanInput')?.value || '').toLowerCase().trim();
+      const filtered = rawPlans.filter(p => !search || (p.company || '').toLowerCase().includes(search) || (p.title || p.name || '').toLowerCase().includes(search));
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted);">ไม่พบข้อมูลแผนประกันภัย</td></tr>`;
+        return;
+      }
+
+      filtered.forEach(plan => {
+        let statusBadge = `<span class="badge badge-success">อนุมัติแล้ว</span>`;
+        if (plan.status === 'pending') {
+          statusBadge = `<span class="badge badge-warning">รอแอดมินอนุมัติ</span>`;
+        } else if (plan.status === 'rejected') {
+          statusBadge = `<span class="badge badge-danger">ไม่อนุมัติ</span>`;
+        }
+
+        tbody.innerHTML += `
+          <tr>
+            <td>#${plan.id || '-'}</td>
+            <td><b>${plan.company}</b></td>
+            <td>${plan.title || plan.name}</td>
+            <td>${Number(plan.price).toLocaleString()} บาท</td>
+            <td>${Number(plan.coverage).toLocaleString()} บาท</td>
+            <td>${plan.repair || plan.repair_type || '-'}</td>
+            <td>${statusBadge}</td>
+            <td>
+              <button class="btn-danger btn-sm" onclick="deletePlan(${plan.id})">ลบ</button>
+            </td>
+          </tr>
+        `;
+      });
+    }
+
+    async function deletePlan(planId) {
+      if (!confirm('คุณต้องการลบแผนประกันนี้หรือไม่?')) return;
+      try {
+        await fetch(`${API_URL}/plans/${planId}`, { method: 'DELETE' });
+      } catch(e){}
+      rawPlans = rawPlans.filter(p => p.id != planId);
+      showToast('ลบแผนประกันเรียบร้อยแล้ว', 'success');
+      loadAllData();
+    }
+
+    // Navigation View Switcher
+    function showView(viewName) {
+      document.getElementById('view-user').style.display = viewName === 'user' ? 'block' : 'none';
+      document.getElementById('view-agent').style.display = viewName === 'agent' ? 'block' : 'none';
+      document.getElementById('view-admin').style.display = viewName === 'admin' ? 'block' : 'none';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function switchAgentTab(tab) {
+      ['overview', 'manage-plans', 'plans'].forEach((t, idx) => {
+        const el = document.getElementById(`agent-tab-${t}`);
+        const btn = document.getElementById(`agent-menu-${idx + 1}`);
+        if (el) el.style.display = (t === tab) ? 'block' : 'none';
+        if (btn) btn.className = (t === tab) ? 'active' : '';
+      });
+    }
+
+    function switchAdminTab(tab) {
+      ['overview', 'users', 'sponsors', 'pending-plans'].forEach((t, idx) => {
+        const el = document.getElementById(`admin-tab-${t}`);
+        const btn = document.getElementById(`admin-menu-${idx + 1}`);
+        if (el) el.style.display = (t === tab) ? 'block' : 'none';
+        if (btn) btn.className = (t === tab) ? 'active' : '';
+      });
+    }
+
+    // Login & Register Logic
+    function openAuthModal(mode) {
+      document.getElementById('authModalOverlay').style.display = 'flex';
+      switchAuthTab(mode);
+    }
+
+    function closeAuthModal() {
+      document.getElementById('authModalOverlay').style.display = 'none';
+    }
+
+    function switchAuthTab(tab) {
+      const btnLogin = document.getElementById('tabBtnLogin');
+      const btnReg = document.getElementById('tabBtnRegister');
+      const formLogin = document.getElementById('formLoginBlock');
+      const formReg = document.getElementById('formRegisterBlock');
+
+      if (tab === 'login') {
+        btnLogin.className = 'auth-tab-btn active';
+        btnReg.className = 'auth-tab-btn';
+        formLogin.style.display = 'block';
+        formReg.style.display = 'none';
+      } else {
+        btnReg.className = 'auth-tab-btn active';
+        btnLogin.className = 'auth-tab-btn';
+        formReg.style.display = 'block';
+        formLogin.style.display = 'none';
+      }
+    }
+
+    function processUnifiedLogin() {
+      const userVal = document.getElementById('loginUsername').value.trim();
+      const passVal = document.getElementById('loginPassword').value.trim();
+
+      if (!userVal || !passVal) {
+        showToast('กรุณากรอกข้อมูลให้ครบถ้วน', 'warning');
+        return;
+      }
+
+      if (userVal === 'admin' && passVal === 'admin123') {
+        currentUser = { name: 'Super Admin', role: 'admin' };
+      } else if (userVal === 'agent' && passVal === '1234') {
+        currentUser = { name: 'Partner Agent', role: 'agent' };
+      } else {
+        const found = rawUsers.find(u => u.email === userVal || u.name === userVal || u.phone === userVal);
+        currentUser = found ? found : { name: userVal, role: 'user' };
+      }
+
+      updateAuthUI();
+      closeAuthModal();
+      showToast(`เข้าสู่ระบบสำเร็จ! ยินดีต้อนรับคุณ ${currentUser.name}`, 'success');
+
+      if (currentUser.role === 'admin') showView('admin');
+      else if (currentUser.role === 'agent') showView('agent');
+    }
+
+    function logout() {
+      currentUser = null;
+      updateAuthUI();
+      showView('user');
+      showToast('ออกจากระบบเรียบร้อยแล้ว', 'warning');
+    }
+
+    function updateAuthUI() {
+      const guestControls = document.getElementById('guestNavControls');
+      const userControls = document.getElementById('userLoggedInControls');
+      const adminNavControls = document.getElementById('adminNavControls');
+      const navRoleLabel = document.getElementById('navRoleLabel');
+      const userNameDisplay = document.getElementById('userNameDisplay');
+
+      if (currentUser) {
+        guestControls.style.display = 'none';
+        userControls.style.display = 'flex';
+        userNameDisplay.innerText = currentUser.name;
+
+        if (currentUser.role === 'admin' || currentUser.role === 'agent') {
+          adminNavControls.style.display = 'flex';
+        } else {
+          adminNavControls.style.display = 'none';
+        }
+        navRoleLabel.innerText = `[สิทธิ์: ${currentUser.role.toUpperCase()}]`;
+      } else {
+        guestControls.style.display = 'flex';
+        userControls.style.display = 'none';
+        adminNavControls.style.display = 'none';
+        navRoleLabel.innerText = '';
+      }
+    }
+
+    function processUserRegister() {
+      const name = document.getElementById('regName').value.trim();
+      const email = document.getElementById('regEmail').value.trim();
+      const phone = document.getElementById('regPhone').value.trim();
+      const password = document.getElementById('regPassword').value.trim();
+
+      if (!name || !email || !phone || !password) {
+        showToast('กรุณากรอกข้อมูลให้ครบถ้วน', 'warning');
+        return;
+      }
+
+      const newUser = { id: Date.now(), name, email, phone, role: 'user', status: 'active', quota: 5 };
+      rawUsers.push(newUser);
+      currentUser = newUser;
+      updateAuthUI();
+      closeAuthModal();
+      showToast('สมัครสมาชิกสำเร็จ!', 'success');
+      loadAllData();
+    }
+
+    // Compare Drawer System
+    function toggleCompare(id) {
+      const index = compareIds.indexOf(id);
+      if (index > -1) {
+        compareIds.splice(index, 1);
+      } else {
+        if (compareIds.length >= 3) {
+          showToast('เปรียบเทียบได้สูงสุด 3 แผนเท่านั้น', 'warning');
+          renderUserGrid();
+          return;
+        }
+        compareIds.push(id);
+      }
+      updateCompareDrawer();
+    }
+
+    function updateCompareDrawer() {
+      const drawer = document.getElementById('compareDrawer');
+      const countEl = document.getElementById('compareCount');
+      const listEl = document.getElementById('compareList');
+
+      countEl.innerText = compareIds.length;
+      listEl.innerHTML = '';
+
+      if (compareIds.length > 0) {
+        drawer.classList.add('show');
+        compareIds.forEach(id => {
+          const plan = rawPlans.find(p => p.id == id);
+          if (plan) {
+            listEl.innerHTML += `<span class="compare-chip">${plan.company} - ${plan.title || plan.name}</span>`;
+          }
+        });
+      } else {
+        drawer.classList.remove('show');
+      }
+    }
+
+    function openCompareModal() {
+      if (compareIds.length === 0) return;
+      const container = document.getElementById('compareTableContainer');
+      const selectedPlans = rawPlans.filter(p => compareIds.includes(p.id));
+
+      let tableHtml = `
+        <table>
+          <thead>
+            <tr>
+              <th>หัวข้อเปรียบเทียบ</th>
+              ${selectedPlans.map(p => `<th>${p.company}<br><span style="font-size:12px; font-weight:normal;">${p.title || p.name}</span></th>`).join('')}
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><b>ประเภทประกัน</b></td>
+              ${selectedPlans.map(p => `<td>${getCategoryName(p.category)}</td>`).join('')}
+            </tr>
+            <tr>
+              <td><b>เบี้ยประกันภัย/ปี</b></td>
+              ${selectedPlans.map(p => `<td style="color:var(--primary); font-weight:bold;">${Number(p.price).toLocaleString()} บาท</td>`).join('')}
+            </tr>
+            <tr>
+              <td><b>ทุนประกันภัย</b></td>
+              ${selectedPlans.map(p => `<td>${Number(p.coverage).toLocaleString()} บาท</td>`).join('')}
+            </tr>
+            <tr>
+              <td><b>ประเภทการซ่อม</b></td>
+              ${selectedPlans.map(p => `<td>${p.repair || p.repair_type || '-'}</td>`).join('')}
+            </tr>
+          </tbody>
+        </table>
+      `;
+      container.innerHTML = tableHtml;
+      document.getElementById('compareModalOverlay').style.display = 'flex';
+    }
+
+    function closeCompareModal() {
+      document.getElementById('compareModalOverlay').style.display = 'none';
+    }
+
+    // Lead & Sponsor Request
+    function openSponsorModal() { document.getElementById('sponsorModalOverlay').style.display = 'flex'; }
+    function closeSponsorModal() { document.getElementById('sponsorModalOverlay').style.display = 'none'; }
+    
+    function submitSponsorRequest() {
+      const company = document.getElementById('spCompany').value.trim();
+      const contactName = document.getElementById('spContactName').value.trim();
+      const phone = document.getElementById('spPhone').value.trim();
+      const note = document.getElementById('spNote').value.trim();
+
+      if (!company || !contactName || !phone) {
+        showToast('กรุณากรอกข้อมูลให้ครบถ้วน', 'warning');
+        return;
+      }
+      rawSponsors.push({ id: Date.now(), date: new Date().toLocaleDateString('th-TH'), company, contactName, phone, note, status: 'pending' });
+      showToast('ยื่นคำขอสปอนเซอร์สำเร็จ!', 'success');
+      closeSponsorModal();
+      loadAllData();
+    }
+
+    function openLeadModal(planName) {
+      activeLeadPlan = planName;
+      document.getElementById('modalTitle').innerText = `ขอใบเสนอราคา: ${planName}`;
+      document.getElementById('leadModalOverlay').style.display = 'flex';
+    }
+
+    function closeLeadModal() { document.getElementById('leadModalOverlay').style.display = 'none'; }
+
+    function submitLeadModal() {
+      const name = document.getElementById('custName').value.trim();
+      const phone = document.getElementById('custPhone').value.trim();
+      if (!name || !phone) {
+        showToast('กรุณากรอกข้อมูลให้ครบถ้วน', 'warning');
+        return;
+      }
+      rawLeads.push({ id: Date.now(), date: new Date().toLocaleDateString('th-TH'), name, phone, plan: activeLeadPlan, status: 'ใหม่' });
+      showToast('ส่งข้อมูลขอใบเสนอราคาเรียบร้อยแล้ว', 'success');
+      closeLeadModal();
+      loadAllData();
+    }
+
+    // Table Renderers
+    function renderAgentMembersTable() {
+      const tbody = document.getElementById('agentMembersTable');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+      const search = (document.getElementById('searchMemberInput')?.value || '').toLowerCase().trim();
+      const members = rawUsers.filter(u => u.role === 'user' && (!search || u.name.toLowerCase().includes(search) || u.email.toLowerCase().includes(search)));
+
+      document.getElementById('agentMemberCount').innerText = `${members.length} คน`;
+      if (members.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">ไม่พบข้อมูลสมาชิก</td></tr>`;
+        return;
+      }
+      members.forEach(m => {
+        tbody.innerHTML += `<tr><td>#${m.id}</td><td><b>${m.name}</b></td><td>${m.email}</td><td>${m.phone || '-'}</td><td><span class="badge badge-success">ปกติ</span></td><td><button class="btn-outline btn-sm" onclick="openEditUserModal(${m.id})">แก้ไข</button></td></tr>`;
+      });
+    }
+
+    function renderLeadsTable() {
+      const tbody = document.getElementById('agentLeadTable');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+      const search = (document.getElementById('searchLeadInput')?.value || '').toLowerCase().trim();
+      const leads = rawLeads.filter(l => !search || l.name.toLowerCase().includes(search) || l.phone.includes(search));
+
+      if (leads.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">ไม่มีรายการ Lead</td></tr>`;
+        return;
+      }
+      leads.forEach(l => {
+        tbody.innerHTML += `<tr><td>${l.date || '-'}</td><td><b>${l.name}</b></td><td>${l.phone}</td><td>${l.plan}</td><td><span class="badge badge-warning">${l.status || 'รอติดต่อ'}</span></td></tr>`;
+      });
+    }
+
+    function renderAdminUsersTable() {
+      const tbody = document.getElementById('adminUsersTable');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+      const search = (document.getElementById('searchUserAdminInput')?.value || '').toLowerCase().trim();
+      const users = rawUsers.filter(u => !search || u.name.toLowerCase().includes(search) || u.email.toLowerCase().includes(search));
+
+      document.getElementById('adminTotalUsersCount').innerText = `${rawUsers.length} คน`;
+      users.forEach(u => {
+        const roleBadge = u.role === 'admin' ? '<span class="badge badge-danger">Admin</span>' : (u.role === 'agent' ? '<span class="badge badge-info">Partner</span>' : '<span class="badge badge-success">User</span>');
+        tbody.innerHTML += `<tr><td>#${u.id}</td><td><b>${u.name}</b></td><td>${u.email}</td><td>${u.phone || '-'}</td><td>${roleBadge}</td><td>${u.quota || 5} แผน</td><td><span class="badge ${u.status === 'suspended' ? 'badge-danger' : 'badge-success'}">${u.status || 'active'}</span></td><td><button class="btn-outline btn-sm" onclick="openEditUserModal(${u.id})">แก้ไข</button></td></tr>`;
+      });
+    }
+
+    function renderAdminSponsorsTable() {
+      const tbody = document.getElementById('adminSponsorsTable');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+      const search = (document.getElementById('searchSponsorInput')?.value || '').toLowerCase().trim();
+      const sponsors = rawSponsors.filter(s => !search || (s.company || '').toLowerCase().includes(search) || (s.contactName || '').toLowerCase().includes(search));
+
+      const pending = rawSponsors.filter(s => s.status === 'pending');
+      document.getElementById('adminPendingSponsors').innerText = `${pending.length} รายการ`;
+
+      if (sponsors.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted);">ไม่มีคำขอผู้สนับสนุน</td></tr>`;
+        return;
+      }
+      sponsors.forEach(s => {
+        tbody.innerHTML += `<tr><td>${s.date || '-'}</td><td><b>${s.company}</b></td><td>${s.contactName}</td><td>${s.phone}</td><td>${s.note || '-'}</td><td><span class="badge ${s.status === 'approved' ? 'badge-success' : 'badge-warning'}">${s.status === 'approved' ? 'อนุมัติแล้ว' : 'รออนุมัติ'}</span></td><td>${s.status === 'pending' ? `<button class="btn-primary btn-sm" onclick="approveSponsor(${s.id})">อนุมัติ</button>` : '✓ ดำเนินการแล้ว'}</td></tr>`;
+      });
+    }
+
+    function approveSponsor(id) {
+      const sp = rawSponsors.find(s => s.id == id);
+      if (sp) sp.status = 'approved';
+      showToast('อนุมัติคำขอผู้สนับสนุนสำเร็จ!', 'success');
+      loadAllData();
+    }
+
+    function updateStats() {
+      const totalPlansEl = document.getElementById('totalPlansCount');
+      if (totalPlansEl) totalPlansEl.innerText = `${rawPlans.length} แผน`;
+      const adminTotalPlansEl = document.getElementById('adminTotalPlans');
+      if (adminTotalPlansEl) adminTotalPlansEl.innerText = `${rawPlans.length} แผน`;
+    }
+
+    function resetFilters() {
+      document.getElementById('filterSearch').value = '';
+      document.getElementById('filterType').value = 'all';
+      document.getElementById('filterRepair').value = 'all';
+      document.getElementById('filterPrice').value = '50000';
+      renderUserGrid();
+    }
+
+    function openCreateUserModal(role = 'user') {
+      document.getElementById('createUserRole').value = role;
+      document.getElementById('createUserModalOverlay').style.display = 'flex';
+    }
+    function closeCreateUserModal() { document.getElementById('createUserModalOverlay').style.display = 'none'; }
+
+    function saveNewUser() {
+      const name = document.getElementById('createUserName').value.trim();
+      const email = document.getElementById('createUserEmail').value.trim();
+      const phone = document.getElementById('createUserPhone').value.trim();
+      const role = document.getElementById('createUserRole').value;
+      const quota = parseInt(document.getElementById('createUserQuota').value) || 5;
+
+      if (!name || !email) { showToast('กรุณากรอกชื่อและอีเมล', 'warning'); return; }
+      rawUsers.push({ id: Date.now(), name, email, phone, role, quota, status: 'active' });
+      showToast('สร้างผู้ใช้งานใหม่เรียบร้อยแล้ว', 'success');
+      closeCreateUserModal();
+      loadAllData();
+    }
+
+    function openEditUserModal(id) {
+      const user = rawUsers.find(u => u.id == id);
+      if (!user) return;
+      document.getElementById('editUserId').value = user.id;
+      document.getElementById('editUserName').value = user.name;
+      document.getElementById('editUserEmail').value = user.email;
+      document.getElementById('editUserPhone').value = user.phone || '';
+      document.getElementById('editUserRole').value = user.role || 'user';
+      document.getElementById('editUserQuota').value = user.quota || 5;
+      document.getElementById('editUserStatus').value = user.status || 'active';
+      document.getElementById('editUserModalOverlay').style.display = 'flex';
+    }
+    function closeEditUserModal() { document.getElementById('editUserModalOverlay').style.display = 'none'; }
+
+    function saveEditUser() {
+      const id = document.getElementById('editUserId').value;
+      const user = rawUsers.find(u => u.id == id);
+      if (user) {
+        user.name = document.getElementById('editUserName').value.trim();
+        user.email = document.getElementById('editUserEmail').value.trim();
+        user.phone = document.getElementById('editUserPhone').value.trim();
+        user.role = document.getElementById('editUserRole').value;
+        user.quota = parseInt(document.getElementById('editUserQuota').value) || 5;
+        user.status = document.getElementById('editUserStatus').value;
+        showToast('บันทึกการปรับปรุงข้อมูลเรียบร้อยแล้ว', 'success');
+      }
+      closeEditUserModal();
+      loadAllData();
+    }
+
+    window.addEventListener('DOMContentLoaded', loadAllData);
+  </script>
+</body>
+</html>
