@@ -14,12 +14,17 @@
   <!-- Navbar -->
   <nav class="navbar">
     <a href="#" class="logo" onclick="showView('user')">PaloInSure_lnwza007</a>
+    
     <div class="nav-actions">
-      <button class="btn-outline btn-sm" onclick="showView('user')">หน้าหลัก</button>
-      <button class="btn-outline btn-sm" onclick="showView('agent')">จัดการพาร์ทเนอร์</button>
-      <button class="btn-outline btn-sm" onclick="showView('admin')">หน้าแอดมิน</button>
+      <button class="btn-outline btn-sm nav-btn" id="navBtnUser" onclick="showView('user')">หน้าหลัก</button>
+      <button class="btn-outline btn-sm nav-btn" id="navBtnAgent" onclick="showView('agent')">จัดการพาร์ทเนอร์</button>
+      <button class="btn-outline btn-sm nav-btn" id="navBtnAdmin" onclick="showView('admin')">หน้าแอดมิน</button>
       <button class="btn-outline btn-sm" onclick="openSponsorModal()">+ ยื่นคำขอพาร์ทเนอร์</button>
-      <button class="btn-primary btn-sm" onclick="openAuthModal('login')">เข้าสู่ระบบ</button>
+      
+      <!-- ส่วนแสดงสถานะการล็อกอิน -->
+      <div id="authNavArea" style="display: inline-block;">
+        <button class="btn-primary btn-sm" onclick="openAuthModal('login')">เข้าสู่ระบบ / สมัครสมาชิก</button>
+      </div>
     </div>
   </nav>
 
@@ -82,7 +87,7 @@
   <!-- VIEW 2: AGENT VIEW -->
   <div class="container" id="view-agent" style="display: none;">
     <h2>💼 พอร์ตจัดการพาร์ทเนอร์ / ตัวแทน (Agent Dashboard)</h2>
-    <hr style="margin: 16px 0;">
+    <hr style="margin: 16px 0; border: 0; border-top: 1px solid var(--border);">
     <div id="agent-tab-overview">
       <div class="dash-grid-4col">
         <div class="stat-card"><div>โควต้าการลงแผนประกัน</div><div class="val" id="agentQuotaDisplay">5 แผน</div></div>
@@ -146,6 +151,67 @@
   </div>
 
   <!-- MODALS -->
+
+  <!-- Modal เข้าสู่ระบบ / สมัครสมาชิก -->
+  <div id="authModalOverlay" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-tabs">
+        <button class="modal-tab active" id="tabLoginBtn" onclick="switchAuthTab('login')">เข้าสู่ระบบ</button>
+        <button class="modal-tab" id="tabRegisterBtn" onclick="switchAuthTab('register')">สมัครสมาชิกใหม่</button>
+      </div>
+
+      <!-- ฟอร์มเข้าสู่ระบบ -->
+      <form id="loginForm" onsubmit="handleLogin(event)">
+        <div class="filter-group">
+          <label>อีเมล / เบอร์โทรศัพท์ / Username</label>
+          <input type="text" id="loginUsername" required placeholder="เช่น admin, agent หรือ user">
+        </div>
+        <div class="filter-group">
+          <label>รหัสผ่าน</label>
+          <input type="password" id="loginPassword" required placeholder="กรอกรหัสผ่าน">
+        </div>
+        <div style="background: #F3F4F6; padding: 8px 12px; border-radius: 6px; font-size: 12px; margin-bottom: 12px; color: var(--text-muted);">
+          <b>💡 บัญชีทดสอบด่วน:</b><br>
+          • Admin: <code>admin</code> / <code>admin</code><br>
+          • Agent: <code>agent</code> / <code>agent</code><br>
+          • User: <code>user</code> / <code>user</code>
+        </div>
+        <button type="submit" class="btn-primary" style="width: 100%; margin-top: 4px;">เข้าสู่ระบบ</button>
+        <button type="button" class="btn-text" style="width: 100%; margin-top: 8px;" onclick="closeAuthModal()">ยกเลิก</button>
+      </form>
+
+      <!-- ฟอร์มสมัครสมาชิก -->
+      <form id="registerForm" style="display: none;" onsubmit="handleRegister(event)">
+        <div class="filter-group">
+          <label>ชื่อ-นามสกุล</label>
+          <input type="text" id="regName" required placeholder="นายสมชาย ใจดี">
+        </div>
+        <div class="filter-group">
+          <label>อีเมล</label>
+          <input type="email" id="regEmail" required placeholder="somchai@email.com">
+        </div>
+        <div class="filter-group">
+          <label>เบอร์โทรศัพท์</label>
+          <input type="tel" id="regPhone" required placeholder="0812345678">
+        </div>
+        <div class="filter-group">
+          <label>รหัสผ่าน</label>
+          <input type="password" id="regPassword" required placeholder="สร้างรหัสผ่านอย่างน้อย 6 ตัวอักษร">
+        </div>
+        <div class="filter-group">
+          <label>สมัครในประเภท</label>
+          <select id="regRole">
+            <option value="user">สมาชิกทั่วไป (ค้นหาประกัน)</option>
+            <option value="agent">พาร์ทเนอร์ / ตัวแทนประกัน (Agent)</option>
+          </select>
+        </div>
+        <button type="submit" class="btn-primary" style="width: 100%; margin-top: 4px;">ยืนยันการสมัครสมาชิก</button>
+        <button type="button" class="btn-text" style="width: 100%; margin-top: 8px;" onclick="closeAuthModal()">ยกเลิก</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal ขอใบเสนอราคา -->
   <div id="leadModalOverlay" class="modal-overlay">
     <div class="modal">
       <h3 style="margin-bottom: 8px;">ขอใบเสนอราคา</h3>
@@ -154,20 +220,11 @@
       <div class="filter-group"><label>เบอร์โทรศัพท์</label><input type="tel" id="leadPhone" placeholder="0812345678"></div>
       <div class="filter-group"><label>อีเมลรับใบเสนอราคา</label><input type="email" id="leadEmail" placeholder="somchai@email.com"></div>
       <button class="btn-primary" style="width: 100%; margin-top: 12px;" onclick="submitLead()">ยืนยันส่งข้อมูล</button>
-      <button style="width: 100%; margin-top: 8px; background: transparent; border: none; cursor: pointer; color: var(--text-muted);" onclick="closeLeadModal()">ยกเลิก</button>
+      <button type="button" class="btn-text" style="width: 100%; margin-top: 8px;" onclick="closeLeadModal()">ยกเลิก</button>
     </div>
   </div>
 
-  <div id="authModalOverlay" class="modal-overlay">
-    <div class="modal">
-      <h3 style="margin-bottom: 16px;">เข้าสู่ระบบ / สมัครสมาชิก</h3>
-      <div class="filter-group"><label>อีเมล / เบอร์โทรศัพท์ / Username</label><input type="text" id="loginUsername" placeholder="กรอกอีเมลหรือเบอร์โทร"></div>
-      <div class="filter-group"><label>รหัสผ่าน</label><input type="password" id="loginPassword" placeholder="กรอกรหัสผ่าน"></div>
-      <button class="btn-primary" style="width: 100%; margin-top: 8px;" onclick="closeAuthModal()">เข้าสู่ระบบ</button>
-      <button style="width: 100%; margin-top: 8px; background: transparent; border: none; cursor: pointer; color: var(--text-muted);" onclick="closeAuthModal()">ยกเลิก</button>
-    </div>
-  </div>
-
+  <!-- Modal แก้ไขผู้ใช้งาน -->
   <div id="editUserModalOverlay" class="modal-overlay">
     <div class="modal">
       <h3 style="margin-bottom: 16px;">แก้ไขข้อมูลผู้ใช้งาน</h3>
@@ -185,10 +242,11 @@
       </div>
       <div class="filter-group"><label>โควต้าแผนประกัน</label><input type="number" id="editUserQuota"></div>
       <button class="btn-primary" style="width: 100%;" onclick="saveEditUser()">บันทึกการแก้ไขลง Database</button>
-      <button style="width: 100%; margin-top: 8px; background: transparent; border: none; cursor: pointer; color: var(--text-muted);" onclick="closeEditUserModal()">ยกเลิก</button>
+      <button type="button" class="btn-text" style="width: 100%; margin-top: 8px;" onclick="closeEditUserModal()">ยกเลิก</button>
     </div>
   </div>
 
+  <!-- Modal คำขอพาร์ทเนอร์ -->
   <div id="sponsorModalOverlay" class="modal-overlay">
     <div class="modal">
       <h3 style="margin-bottom: 16px;">ยื่นคำขอเป็นผู้สนับสนุน / พาร์ทเนอร์</h3>
@@ -196,10 +254,11 @@
       <div class="filter-group"><label>ชื่อผู้ติดต่อ</label><input type="text" id="sponsorContact" placeholder="คุณสมชาย"></div>
       <div class="filter-group"><label>เบอร์โทรศัพท์ติดต่อ</label><input type="tel" id="sponsorPhone" placeholder="0812345678"></div>
       <button class="btn-primary" style="width: 100%; margin-top: 12px;" onclick="submitSponsorRequest()">ส่งคำขอสปอนเซอร์</button>
-      <button style="width: 100%; margin-top: 8px; background: transparent; border: none; cursor: pointer; color: var(--text-muted);" onclick="closeSponsorModal()">ยกเลิก</button>
+      <button type="button" class="btn-text" style="width: 100%; margin-top: 8px;" onclick="closeSponsorModal()">ยกเลิก</button>
     </div>
   </div>
 
+  <!-- Modal เปรียบเทียบ -->
   <div id="compareModalOverlay" class="modal-overlay">
     <div class="modal modal-lg">
       <h3 style="margin-bottom: 16px;">⚖️ ตารางเปรียบเทียบแผนประกันภัย</h3>
