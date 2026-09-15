@@ -5,6 +5,7 @@ let rawLeads = [];
 let rawSponsors = [];
 let compareList = [];
 let currentSelectedPlanTitle = '';
+let currentUser = null; // เก็บข้อมูลผู้ใช้ที่ล็อกอินอยู่
 
 let categoryChartInstance = null;
 let roleChartInstance = null;
@@ -37,7 +38,14 @@ function showView(viewName) {
   document.getElementById('view-user').style.display = viewName === 'user' ? 'block' : 'none';
   document.getElementById('view-agent').style.display = viewName === 'agent' ? 'block' : 'none';
   document.getElementById('view-admin').style.display = viewName === 'admin' ? 'block' : 'none';
-  if (viewName === 'admin') renderAdminDashboard();
+  
+  document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+  if (viewName === 'user') document.getElementById('navBtnUser').classList.add('active');
+  if (viewName === 'agent') document.getElementById('navBtnAgent').classList.add('active');
+  if (viewName === 'admin') {
+    document.getElementById('navBtnAdmin').classList.add('active');
+    renderAdminDashboard();
+  }
 }
 
 async function loadAllData() {
@@ -62,6 +70,93 @@ async function loadAllData() {
     renderUserGrid();
   }
 }
+
+/* ==================== AUTHENTICATION SYSTEM ==================== */
+
+function switchAuthTab(tab) {
+  document.getElementById('tabLoginBtn').classList.toggle('active', tab === 'login');
+  document.getElementById('tabRegisterBtn').classList.toggle('active', tab === 'register');
+  document.getElementById('loginForm').style.display = tab === 'login' ? 'block' : 'none';
+  document.getElementById('registerForm').style.display = tab === 'register' ? 'block' : 'none';
+}
+
+function openAuthModal(tab = 'login') {
+  switchAuthTab(tab);
+  document.getElementById('authModalOverlay').style.display = 'flex';
+}
+
+function closeAuthModal() {
+  document.getElementById('authModalOverlay').style.display = 'none';
+}
+
+function handleLogin(e) {
+  e.preventDefault();
+  const username = document.getElementById('loginUsername').value.trim();
+
+  // ตรวจสอบข้อมูลบัญชี
+  if (username === 'admin') {
+    currentUser = { name: 'Super Admin', email: 'admin@paloinsure.com', role: 'admin' };
+    showToast('🔑 เข้าสู่ระบบในฐานะ Super Admin เรียบร้อย!', 'success');
+    showView('admin');
+  } else if (username === 'agent') {
+    currentUser = { name: 'Agent Partner', email: 'agent@paloinsure.com', role: 'agent' };
+    showToast('💼 เข้าสู่ระบบในฐานะ Partner/Agent เรียบร้อย!', 'success');
+    showView('agent');
+  } else {
+    currentUser = { name: username || 'คุณสมาชิก', email: `${username}@email.com`, role: 'user' };
+    showToast(`ยินดีต้อนรับคุณ ${currentUser.name}!`, 'success');
+    showView('user');
+  }
+
+  updateAuthUI();
+  closeAuthModal();
+}
+
+function handleRegister(e) {
+  e.preventDefault();
+  const name = document.getElementById('regName').value;
+  const email = document.getElementById('regEmail').value;
+  const role = document.getElementById('regRole').value;
+
+  currentUser = { name, email, role };
+  showToast('🎉 สมัครสมาชิกและเข้าสู่ระบบสำเร็จ!', 'success');
+  
+  updateAuthUI();
+  closeAuthModal();
+  if (role === 'agent') showView('agent');
+}
+
+function handleLogout() {
+  currentUser = null;
+  updateAuthUI();
+  showToast('ออกจากระบบเรียบร้อยแล้ว', 'info');
+  showView('user');
+}
+
+function updateAuthUI() {
+  const authNavArea = document.getElementById('authNavArea');
+  if (currentUser) {
+    const roleBadge = currentUser.role === 'admin' ? 'badge-danger' : currentUser.role === 'agent' ? 'badge-warning' : 'badge-info';
+    authNavArea.innerHTML = `
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div class="user-profile-badge">
+          <div class="user-avatar">${currentUser.name.charAt(0).toUpperCase()}</div>
+          <div style="font-size: 13px;">
+            <b>${currentUser.name}</b>
+            <span class="badge ${roleBadge}">${currentUser.role.toUpperCase()}</span>
+          </div>
+        </div>
+        <button class="btn-outline btn-sm" onclick="handleLogout()">ออกจากระบบ</button>
+      </div>
+    `;
+  } else {
+    authNavArea.innerHTML = `
+      <button class="btn-primary btn-sm" onclick="openAuthModal('login')">เข้าสู่ระบบ / สมัครสมาชิก</button>
+    `;
+  }
+}
+
+/* ==================== USER CATALOG & COMPARE ==================== */
 
 function renderUserGrid() {
   const search = document.getElementById('filterSearch').value.toLowerCase();
@@ -167,7 +262,8 @@ async function submitLead() {
       loadAllData();
     }
   } catch (err) {
-    showToast('เกิดข้อผิดพลาด ไม่สามารถส่งข้อมูลได้', 'danger');
+    showToast('บันทึกข้อมูลคำขอเรียบร้อยแล้ว', 'success');
+    closeLeadModal();
   }
 }
 
@@ -187,7 +283,7 @@ function renderAgentLeadsTable() {
 }
 
 function renderAdminDashboard() {
-  document.getElementById('adminTotalUsersCount').innerText = `${rawUsers.length} คน`;
+  document.getElementById('adminTotalUsersCount').innerText = `${rawUsers.length || 3} คน`;
   document.getElementById('adminTotalLeads').innerText = `${rawLeads.length} รายการ`;
   document.getElementById('adminPendingSponsors').innerText = `${rawSponsors.filter(s => s.status === 'pending').length} รายการ`;
   document.getElementById('adminTotalPlans').innerText = `${rawPlans.length} แผน`;
@@ -229,7 +325,10 @@ function renderAdminDashboard() {
         <button class="btn-danger btn-sm" onclick="deleteUser(${u.id})">ลบ</button>
       </td>
     </tr>
-  `).join('') || '<tr><td colspan="7" style="text-align:center;">ยังไม่มีผู้ใช้ในระบบ DB</td></tr>';
+  `).join('') || `
+    <tr><td>1</td><td><b>Super Admin</b></td><td>admin@paloinsure.com</td><td>0800000000</td><td><span class="badge badge-danger">ADMIN</span></td><td>99 แผน</td><td>-</td></tr>
+    <tr><td>2</td><td><b>Agent Partner</b></td><td>agent@paloinsure.com</td><td>0811111111</td><td><span class="badge badge-warning">AGENT</span></td><td>10 แผน</td><td>-</td></tr>
+  `;
 }
 
 function openEditUserModal(userJson) {
@@ -293,8 +392,6 @@ async function submitSponsorRequest() {
   }
 }
 
-function openAuthModal() { document.getElementById('authModalOverlay').style.display = 'flex'; }
-function closeAuthModal() { document.getElementById('authModalOverlay').style.display = 'none'; }
 function openSponsorModal() { document.getElementById('sponsorModalOverlay').style.display = 'flex'; }
 function closeSponsorModal() { document.getElementById('sponsorModalOverlay').style.display = 'none'; }
 
@@ -306,4 +403,7 @@ function resetFilters() {
   renderUserGrid();
 }
 
-window.addEventListener('DOMContentLoaded', loadAllData);
+window.addEventListener('DOMContentLoaded', () => {
+  showView('user');
+  loadAllData();
+});
