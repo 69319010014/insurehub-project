@@ -1227,21 +1227,41 @@
     }
     function closeEditUserModal() { document.getElementById('editUserModalOverlay').style.display = 'none'; }
 
-    function saveEditUser() {
-      const id = document.getElementById('editUserId').value;
-      const user = rawUsers.find(u => u.id == id);
-      if (user) {
-        user.name = document.getElementById('editUserName').value.trim();
-        user.email = document.getElementById('editUserEmail').value.trim();
-        user.phone = document.getElementById('editUserPhone').value.trim();
-        user.role = document.getElementById('editUserRole').value;
-        user.quota = parseInt(document.getElementById('editUserQuota').value) || 5;
-        user.status = document.getElementById('editUserStatus').value;
-        showToast('บันทึกการปรับปรุงข้อมูลเรียบร้อยแล้ว', 'success');
-      }
+async function saveEditUser() {
+  const id = document.getElementById('editUserId').value;
+  
+  // รวบรวมข้อมูลจาก Form
+  const updatedUser = {
+    name: document.getElementById('editUserName').value.trim(),
+    email: document.getElementById('editUserEmail').value.trim(),
+    phone: document.getElementById('editUserPhone').value.trim(),
+    role: document.getElementById('editUserRole').value,
+    quota: parseInt(document.getElementById('editUserQuota').value) || 5,
+    status: document.getElementById('editUserStatus').value
+  };
+
+  try {
+    // 1. ส่งข้อมูลไปเซิร์ฟเวอร์
+    const response = await fetch(`/api/users/${id}`, {
+      method: 'PUT', // หรือ 'POST' ขึ้นอยู่กับที่ตั้งไว้ใน server.js
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(updatedUser)
+    });
+
+    if (response.ok) {
+      showToast('บันทึกการปรับปรุงข้อมูลเรียบร้อยแล้ว', 'success');
       closeEditUserModal();
-      loadAllData();
+      loadAllData(); // ดึงข้อมูลใหม่ล่าสุดจากเซิร์ฟเวอร์มาแสดงผล
+    } else {
+      showToast('ไม่สามารถบันทึกข้อมูลได้', 'error');
     }
+  } catch (error) {
+    console.error('Error updating user:', error);
+    showToast('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์', 'error');
+  }
+}
 
     window.addEventListener('DOMContentLoaded', loadAllData);
   </script>
