@@ -408,15 +408,35 @@
     </div>
   </div>
 
-  <div id="authModalOverlay" class="modal-overlay">
-    <div class="modal">
-      <h3 style="margin-bottom: 16px;">เข้าสู่ระบบ / สมัครสมาชิก</h3>
+ <div id="authModalOverlay" class="modal-overlay">
+  <div class="modal">
+    <h3 style="margin-bottom: 16px;">เข้าสู่ระบบ / สมัครสมาชิก</h3>
+    
+    <!-- ปุ่มสลับหน้า เข้าสู่ระบบ / สมัครสมาชิก -->
+    <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+      <button class="btn-primary" id="tabLoginBtn" style="flex: 1;" onclick="switchAuthTab('login')">เข้าสู่ระบบ</button>
+      <button class="btn-outline" id="tabRegisterBtn" style="flex: 1;" onclick="switchAuthTab('register')">สมัครสมาชิก</button>
+    </div>
+
+    <!-- ฟอร์มเข้าสู่ระบบ -->
+    <div id="loginForm">
       <div class="filter-group"><label>อีเมล / เบอร์โทรศัพท์ / Username</label><input type="text" id="loginUsername" placeholder="กรอกอีเมลหรือเบอร์โทร"></div>
       <div class="filter-group"><label>รหัสผ่าน</label><input type="password" id="loginPassword" placeholder="กรอกรหัสผ่าน"></div>
       <button class="btn-primary" style="width: 100%; margin-top: 8px;" onclick="handleLogin()">เข้าสู่ระบบ</button>
-      <button style="width: 100%; margin-top: 8px; background: transparent; border: none; cursor: pointer; color: var(--text-muted);" onclick="closeAuthModal()">ยกเลิก</button>
     </div>
+
+    <!-- ฟอร์มสมัครสมาชิก -->
+    <div id="registerForm" style="display: none;">
+      <div class="filter-group"><label>ชื่อ-นามสกุล</label><input type="text" id="regName" placeholder="กรอกชื่อ-นามสกุล"></div>
+      <div class="filter-group"><label>อีเมล</label><input type="email" id="regEmail" placeholder="example@email.com"></div>
+      <div class="filter-group"><label>เบอร์โทรศัพท์</label><input type="tel" id="regPhone" placeholder="08XXXXXXXX"></div>
+      <div class="filter-group"><label>รหัสผ่าน</label><input type="password" id="regPassword" placeholder="กำหนดรหัสผ่าน"></div>
+      <button class="btn-success" style="width: 100%; margin-top: 8px;" onclick="handleRegister()">ยืนยันสมัครสมาชิก</button>
+    </div>
+
+    <button style="width: 100%; margin-top: 8px; background: transparent; border: none; cursor: pointer; color: var(--text-muted);" onclick="closeAuthModal()">ยกเลิก</button>
   </div>
+</div>
 
   <div id="editUserModalOverlay" class="modal-overlay">
     <div class="modal">
@@ -966,6 +986,57 @@
       loadAllData();
       updateUIByRole();
     });
+  
+    function switchAuthTab(type) {
+  const loginForm = document.getElementById('loginForm');
+  const registerForm = document.getElementById('registerForm');
+  const tabLoginBtn = document.getElementById('tabLoginBtn');
+  const tabRegisterBtn = document.getElementById('tabRegisterBtn');
+
+  if (type === 'login') {
+    loginForm.style.display = 'block';
+    registerForm.style.display = 'none';
+    tabLoginBtn.className = 'btn-primary';
+    tabRegisterBtn.className = 'btn-outline';
+  } else {
+    loginForm.style.display = 'none';
+    registerForm.style.display = 'block';
+    tabLoginBtn.className = 'btn-outline';
+    tabRegisterBtn.className = 'btn-primary';
+  }
+}
+
+async function handleRegister() {
+  const name = document.getElementById('regName').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const phone = document.getElementById('regPhone').value.trim();
+  const password = document.getElementById('regPassword').value.trim();
+
+  if (!name || !email || !password) {
+    showToast('กรุณากรอกข้อมูลให้ครบถ้วน', 'warning');
+    return;
+  }
+
+  const newUser = { id: Date.now(), name, email, phone, role: 'user', status: 'ปกติ' };
+
+  try {
+    await fetch(`${API_BASE}/users`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newUser)
+    }).catch(() => {});
+
+    rawUsers.push(newUser);
+    currentUser = newUser;
+    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+    
+    showToast('สมัครสมาชิกและเข้าสู่ระบบสำเร็จ!', 'success');
+    closeAuthModal();
+    updateUIByRole();
+  } catch (err) {
+    showToast('เกิดข้อผิดพลาดในการสมัครสมาชิก', 'danger');
+  }
+}
   </script>
 </body>
 </html>
