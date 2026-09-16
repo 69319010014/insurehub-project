@@ -222,12 +222,81 @@
     </main>
   </div>
 
-  <!-- VIEW 3: USER FRONTEND VIEW -->
-  <div class="container" id="view-user" style="display: none; padding: 20px;">
-    <h2>หน้าหลักสำหรับผู้ใช้ทั่วไป (User Marketplace)</h2>
-    <button class="btn-primary" style="margin-top: 10px;" onclick="showMainView('partner')">กลับเข้าหน้า Partner Management</button>
-  </div>
+ <!-- ==================== VIEW 3: USER FRONTEND MARKETPLACE ==================== -->
+<div class="container" id="view-user" style="max-width: 1200px; margin: 0 auto; padding: 20px;">
+  
+  <!-- Hero Banner / ค้นหาประกัน -->
+  <section style="background: linear-gradient(135deg, #1B4D3E, #2d7a63); color: white; padding: 40px; border-radius: 12px; margin-bottom: 30px; text-align: center;">
+    <h1 style="font-size: 28px; margin-bottom: 10px;">ค้นหาและเปรียบเทียบประกันภัยที่คุ้มค่าที่สุด</h1>
+    <p style="opacity: 0.9; margin-bottom: 25px;">รวมแผนประกันภัยรถยนต์ บ้าน และชีวิต จากบริษัทชั้นนำทั่วประเทศ</p>
+    
+    <div style="display: flex; gap: 10px; max-width: 700px; margin: 0 auto; background: white; padding: 8px; border-radius: 8px;">
+      <select id="filterCategorySelect" style="border: 1px solid #ddd; padding: 10px; border-radius: 6px; color: #333; outline: none;">
+        <option value="all">ทุกประเภทประกัน</option>
+        <option value="car">ประกันรถยนต์ ชั้น 1</option>
+        <option value="home">ประกันอัคคีภัย</option>
+        <option value="life">ประกันชีวิต</option>
+      </select>
+      <input type="text" id="userSearchInput" placeholder="พิมพ์ชื่อบริษัท หรือชื่อแผนประกัน..." style="flex: 1; border: 1px solid #ddd; padding: 10px; border-radius: 6px; outline: none; color: #333;">
+      <button class="btn-primary" style="background: #1B4D3E; padding: 10px 24px; border-radius: 6px;" onclick="renderUserMarketplace()">ค้นหา</button>
+    </div>
+  </section>
 
+  <!-- รายการแผนประกันภัย (Card Grid) -->
+  <section>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <h2>แผนประกันภัยแนะนำสำหรับคุณ</h2>
+      <span style="color: #666;" id="planCountText">พบ 3 รายการพร้อมความคุ้มครอง</span>
+    </div>
+
+    <div id="userPlansGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px;">
+      <!-- การ์ดรายการประกัน -->
+      <div class="card" style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 20px; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+        <span style="background: #e0f2fe; color: #0369a1; font-size: 12px; padding: 4px 8px; border-radius: 4px; font-weight: bold;">ประกันรถยนต์ ชั้น 1</span>
+        <h3 style="margin: 10px 0 5px 0; color: #1B4D3E;">วิริยะประกันภัย</h3>
+        <p style="color: #555; font-size: 14px; margin-bottom: 15px;">ประกันรถยนต์ ชั้น 1 Pro</p>
+        <hr style="border: none; border-top: 1px solid #eee; margin-bottom: 15px;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px;">
+          <span style="color: #666;">ทุนประกัน:</span>
+          <strong>500,000 บาท</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 14px;">
+          <span style="color: #666;">การซ่อม:</span>
+          <strong>ซ่อมห้าง (ศูนย์)</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <span style="font-size: 12px; color: #888;">เบี้ยเริ่มต้น/ปี</span>
+            <div style="font-size: 20px; font-weight: bold; color: #16A34A;">15,500 ฿</div>
+          </div>
+          <button class="btn-primary" style="background: #1B4D3E;" onclick="alert('สนใจขอใบเสนอราคาแผนนี้')">ขอใบเสนอราคา</button>
+        </div>
+      </div>
+
+      <div class="card" style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 20px; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+        <span style="background: #fef08a; color: #854d0e; font-size: 12px; padding: 4px 8px; border-radius: 4px; font-weight: bold;">ประกันอัคคีภัย</span>
+        <h3 style="margin: 10px 0 5px 0; color: #1B4D3E;">กรุงเทพประกันภัย</h3>
+        <p style="color: #555; font-size: 14px; margin-bottom: 15px;">ประกันอัคคีภัย คุ้มครองบ้าน 360</p>
+        <hr style="border: none; border-top: 1px solid #eee; margin-bottom: 15px;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px;">
+          <span style="color: #666;">ทุนประกัน:</span>
+          <strong>2,000,000 บาท</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 14px;">
+          <span style="color: #666;">การซ่อม:</span>
+          <strong>ชดเชยเงินสดตามเงื่อนไข</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <span style="font-size: 12px; color: #888;">เบี้ยเริ่มต้น/ปี</span>
+            <div style="font-size: 20px; font-weight: bold; color: #16A34A;">2,800 ฿</div>
+          </div>
+          <button class="btn-primary" style="background: #1B4D3E;" onclick="alert('สนใจขอใบเสนอราคาแผนนี้')">ขอใบเสนอราคา</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
   <script src="script.js"></script>
 </body>
 </html>
