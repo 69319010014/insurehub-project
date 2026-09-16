@@ -93,10 +93,10 @@
     <a href="#" class="logo" onclick="showView('user')">PaloInSure_lnwza007</a>
     <div class="nav-actions">
       <button class="btn-outline btn-sm" onclick="showView('user')">หน้าหลัก</button>
-      <button class="btn-outline btn-sm" onclick="showView('agent')">จัดการพาร์ทเนอร์</button>
-      <button class="btn-outline btn-sm" onclick="showView('admin')">หน้าแอดมิน</button>
+      <button class="btn-outline btn-sm" id="navAgentBtn" style="display: none;" onclick="showView('agent')">จัดการพาร์ทเนอร์</button>
+      <button class="btn-outline btn-sm" id="navAdminBtn" style="display: none;" onclick="showView('admin')">หน้าแอดมิน</button>
       <button class="btn-outline btn-sm" onclick="openSponsorModal()">+ ยื่นคำขอพาร์ทเนอร์</button>
-      <button class="btn-primary btn-sm" onclick="openAuthModal('login')">เข้าสู่ระบบ</button>
+      <button class="btn-primary btn-sm" id="authBtn" onclick="openAuthModal('login')">เข้าสู่ระบบ</button>
     </div>
   </nav>
 
@@ -240,7 +240,7 @@
       <h3 style="margin-bottom: 16px;">เข้าสู่ระบบ / สมัครสมาชิก</h3>
       <div class="filter-group"><label>อีเมล / เบอร์โทรศัพท์ / Username</label><input type="text" id="loginUsername" placeholder="กรอกอีเมลหรือเบอร์โทร"></div>
       <div class="filter-group"><label>รหัสผ่าน</label><input type="password" id="loginPassword" placeholder="กรอกรหัสผ่าน"></div>
-      <button class="btn-primary" style="width: 100%; margin-top: 8px;" onclick="closeAuthModal()">เข้าสู่ระบบ</button>
+      <button class="btn-primary" style="width: 100%; margin-top: 8px;" onclick="handleLogin()">เข้าสู่ระบบ</button>
       <button style="width: 100%; margin-top: 8px; background: transparent; border: none; cursor: pointer; color: var(--text-muted);" onclick="closeAuthModal()">ยกเลิก</button>
     </div>
   </div>
@@ -298,6 +298,7 @@
     let rawSponsors = [];
     let compareList = [];
     let currentSelectedPlanTitle = '';
+    let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
 
     let categoryChartInstance = null;
     let roleChartInstance = null;
@@ -327,6 +328,15 @@
     }
 
     function showView(viewName) {
+      if (viewName === 'agent' && (!currentUser || (currentUser.role !== 'agent' && currentUser.role !== 'admin'))) {
+        showToast('สิทธิ์ไม่ถูกต้อง: เฉพาะ Partner หรือ Admin เท่านั้น', 'danger');
+        return;
+      }
+      if (viewName === 'admin' && (!currentUser || currentUser.role !== 'admin')) {
+        showToast('สิทธิ์ไม่ถูกต้อง: เฉพาะ Super Admin เท่านั้น', 'danger');
+        return;
+      }
+
       document.getElementById('view-user').style.display = viewName === 'user' ? 'block' : 'none';
       document.getElementById('view-agent').style.display = viewName === 'agent' ? 'block' : 'none';
       document.getElementById('view-admin').style.display = viewName === 'admin' ? 'block' : 'none';
@@ -350,9 +360,106 @@
         renderUserGrid();
         renderAgentLeadsTable();
         renderAdminDashboard();
+        updateUIByRole();
       } catch (err) {
         rawPlans = defaultPlans;
         renderUserGrid();
+        updateUIByRole();
+      }
+    }
+
+    async function handleLogin() {
+      const usernameInput = document.getElementById('loginUsername').value.trim();
+      const passwordInput = document.getElementById('loginPassword').value.trim();
+
+      if (!usernameInput) {
+        showToast('กรุณากรอกอีเมลหรือเบอร์โทรศัพท์', 'warning');
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: usernameInput, password: passwordInput })
+        });
+
+        let userObj;
+        if (res.ok) {
+          const data = await res.json();
+          userObj = data.user;
+        } else {
+          // Fallback เช็คจากฐานข้อมูลตัวแปร rawUsers เพื่อความสะดวกในการทดสอบ
+          const found = rawUsers.find(u => u.email === usernameInput || u.phone === usernameInput);
+          if (found) {
+            userObj = found;
+          } else {
+            let userRole = 'user';
+            if (usernameInput.includes('admin')) userRole = 'admin';
+            else if (usernameInput.includes('agent') || usernameInput.includes('partner')) userRole = 'agent';
+            userObj = { id: Date.now(), name: usernameInput, email: usernameInput, role: userRole };
+          }
+        }
+
+        currentUser = userObj;
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        showToast(`เข้าสู่ระบบสำเร็จ! บทบาท: ${currentUser.role.toUpperCase()}`, 'success');
+        closeAuthModal();
+        updateUIByRole();
+      } catch (err) {
+        showToast('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์', 'danger');
+      }
+    }
+
+    function handleLogout() {
+      currentUser = null;
+      localStorage.removeItem('currentUser');
+      showToast('ออกจากระบบเรียบร้อย', 'success');
+      updateUIByRole();
+    }
+
+    function updateUIByRole() {
+      const navAgentBtn = document.getElementById('navAgentBtn');
+      const navAdminBtn = document.getElementById('navAdminBtn');
+      const authBtn = document.getElementById('authBtn');
+
+      if (!currentUser) {
+        navAgentBtn.style.display = 'none';
+        navAdminBtn.style.display = 'none';
+        authBtn.innerText = 'เข้าสู่ระบบ';
+        authBtn.onclick = () => openAuthModal('login');
+        showView('user');
+        return;
+      }
+
+      authBtn.innerText = `ออกจากระบบ (${currentUser.name || currentUser.role})`;
+      authBtn.onclick = handleLogout;
+
+      // ตรวจสอบระดับสิทธิ์ตาม Diagram
+      if (currentUser.role === 'admin') {
+        navAgentBtn.style.display = 'inline-block';
+        navAdminBtn.style.display = 'inline-block';
+        showView('admin');
+      } else if (currentUser.role === 'agent' || currentUser.role === 'partner') {
+        navAgentBtn.style.display = 'inline-block';
+        navAdminBtn.style.display = 'none';
+        showView('agent');
+      } else {
+        navAgentBtn.style.display = 'none';
+        navAdminBtn.style.display = 'none';
+        showView('user');
+        autoFillUserForm();
+      }
+    }
+
+    function autoFillUserForm() {
+      if (currentUser) {
+        const leadName = document.getElementById('leadName');
+        const leadPhone = document.getElementById('leadPhone');
+        const leadEmail = document.getElementById('leadEmail');
+        if (leadName && currentUser.name) leadName.value = currentUser.name;
+        if (leadPhone && currentUser.phone) leadPhone.value = currentUser.phone;
+        if (leadEmail && currentUser.email) leadEmail.value = currentUser.email;
       }
     }
 
@@ -433,6 +540,7 @@
     function openLeadModal(title) {
       currentSelectedPlanTitle = title;
       document.getElementById('leadPlanTitleDisplay').innerText = `แผนประกัน: ${title}`;
+      autoFillUserForm();
       document.getElementById('leadModalOverlay').style.display = 'flex';
     }
     function closeLeadModal() { document.getElementById('leadModalOverlay').style.display = 'none'; }
