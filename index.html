@@ -13,266 +13,219 @@
 
   <!-- Navbar -->
   <nav class="navbar">
-    <a href="#" class="logo" onclick="showView('user')">PaloInSure_lnwza007</a>
+    <a href="#" class="logo" onclick="showMainView('user')">PaloInSure_lnwza007</a>
     
     <div class="nav-actions">
-      <button class="btn-outline btn-sm nav-btn active" id="navBtnUser" onclick="showView('user')">หน้าหลัก</button>
-      
-      <!-- ซ่อนปุ่มสองปุ่มนี้ไว้ก่อน โดยจะแสดงตามสิทธิ์ Role ตอนล็อกอิน -->
-      <button class="btn-outline btn-sm nav-btn" id="navBtnAgent" style="display: none;" onclick="showView('agent')">จัดการพาร์ทเนอร์</button>
-      <button class="btn-outline btn-sm nav-btn" id="navBtnAdmin" style="display: none;" onclick="showView('admin')">หน้าแอดมิน</button>
-      
-      <button class="btn-outline btn-sm" onclick="openSponsorModal()">+ ยื่นคำขอพาร์ทเนอร์</button>
-      
-      <!-- ส่วนแสดงสถานะการล็อกอิน -->
-      <div id="authNavArea" style="display: inline-block;">
-        <button class="btn-primary btn-sm" onclick="openAuthModal('login')">เข้าสู่ระบบ / สมัครสมาชิก</button>
-      </div>
+      <span id="roleDisplayBadge" style="font-size: 13px; color: #666; margin-right: 8px;">[สิทธิ์: ADMIN]</span>
+      <button class="btn-outline btn-sm nav-btn" id="navBtnAdmin" onclick="showMainView('admin')">หน้าแอดมิน</button>
+      <button class="btn-outline btn-sm nav-btn active" id="navBtnPartner" onclick="showMainView('partner')">จัดการพาร์ทเนอร์</button>
+      <span id="userInfoText" style="font-weight: bold; margin: 0 8px;">Super Admin</span>
+      <button class="btn-danger btn-sm" onclick="showMainView('user')">ออกจากระบบ</button>
     </div>
   </nav>
 
-  <!-- VIEW 1: USER VIEW -->
-  <div class="container" id="view-user">
-    <div style="margin-bottom: 20px;">
-      <h2>ศูนย์รวมและเปรียบเทียบประกันภัย</h2>
-      <p style="color: var(--text-muted); font-size: 14px;">ข้อมูลเชื่อมต่อกับฐานข้อมูล PaloInSure_lnwza007 (SQLite Database)</p>
-    </div>
-
-    <div class="layout-grid">
-      <aside class="card">
-        <h3 style="font-size: 16px; margin-bottom: 12px;">🔍 ค้นหา & กรองข้อมูล</h3>
-        <div class="filter-group">
-          <label>ค้นหาชื่อบริษัท / แผน</label>
-          <input type="text" id="filterSearch" oninput="renderUserGrid()" placeholder="พิมพ์คำค้นหา...">
-        </div>
-        <div class="filter-group">
-          <label>ประเภทประกัน</label>
-          <select id="filterType" onchange="renderUserGrid()">
-            <option value="all">-- ทั้งหมดทุกประเภทประกัน --</option>
-            <option value="ประกันรถยนต์ ชั้น 1">ประกันรถยนต์ ชั้น 1</option>
-            <option value="ประกันชีวิตแบบตลอดชีพ">ประกันชีวิตแบบตลอดชีพ</option>
-            <option value="ประกันอัคคีภัย">ประกันอัคคีภัย</option>
-            <option value="ประกันอุทกภัย">ประกันอุทกภัย</option>
-            <option value="ประกันภัยทางทะเลและขนส่ง">ประกันภัยทางทะเลและขนส่ง</option>
-          </select>
-        </div>
-        <div class="filter-group">
-          <label>ประเภทการซ่อม</label>
-          <select id="filterRepair" onchange="renderUserGrid()">
-            <option value="all">ทั้งหมด</option>
-            <option value="ซ่อมห้าง (ศูนย์)">ซ่อมห้าง (ศูนย์)</option>
-            <option value="ซ่อมอู่">ซ่อมอู่</option>
-            <option value="ชดเชยเงินสดตามเงื่อนไข">ชดเชยเงินสดตามเงื่อนไข</option>
-          </select>
-        </div>
-        <div class="filter-group">
-          <label>งบประมาณสูงสุด (บาท/ปี)</label>
-          <input type="number" id="filterPrice" value="50000" oninput="renderUserGrid()">
-        </div>
-        <button class="btn-outline" style="width:100%; margin-top: 8px;" onclick="resetFilters()">ล้างตัวกรองทั้งหมด</button>
-      </aside>
-
-      <main id="insuranceGrid"></main>
-    </div>
-  </div>
-
-  <!-- Drawer เปรียบเทียบ -->
-  <div class="compare-drawer" id="compareDrawer">
-    <div>
-      <b>เปรียบเทียบแผนประกันภัย (<span id="compareCount">0</span>/3)</b>
-      <div id="compareList" style="margin-top: 4px;"></div>
-    </div>
-    <div class="nav-actions">
-      <button class="btn-primary" onclick="openCompareModal()">เปิดตารางเปรียบเทียบ</button>
-    </div>
-  </div>
-
-  <!-- VIEW 2: AGENT VIEW -->
-  <div class="container" id="view-agent" style="display: none;">
-    <h2>💼 พอร์ตจัดการพาร์ทเนอร์ / ตัวแทน (Agent Dashboard)</h2>
-    <hr style="margin: 16px 0; border: 0; border-top: 1px solid var(--border);">
-    <div id="agent-tab-overview">
-      <div class="dash-grid-4col">
-        <div class="stat-card"><div>โควต้าการลงแผนประกัน</div><div class="val" id="agentQuotaDisplay">5 แผน</div></div>
-        <div class="stat-card"><div>แผนประกันที่เปิดใช้งาน</div><div class="val" id="agentActivePlansCount">12 แผน</div></div>
-        <div class="stat-card"><div>ลูกค้าร้องขอเสนอราคา (Leads)</div><div class="val" id="agentLeadsCount">0 รายการ</div></div>
+  <!-- ==================== VIEW 1: PARTNER MANAGEMENT (มี Sidebar ซ้าย) ==================== -->
+  <div class="container-fluid" id="view-partner" style="display: flex; gap: 20px; padding: 20px;">
+    <!-- Sidebar -->
+    <aside class="sidebar-menu" style="width: 220px; flex-shrink: 0; background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #e5e7eb; display: flex; flex-direction: column; justify-content: space-between; min-height: 80vh;">
+      <div>
+        <h4 style="color: #1B4D3E; margin-bottom: 15px; font-size: 16px;">Partner Management</h4>
+        <ul style="list-style: none; padding: 0; margin: 0;">
+          <li class="sidebar-item active" id="sidePartnerOverview" onclick="switchPartnerTab('overview')">ภาพรวม & สมาชิก</li>
+          <li class="sidebar-item" id="sidePartnerPlans" onclick="switchPartnerTab('plans')">จัดการแผนประกัน</li>
+          <li class="sidebar-item" id="sidePartnerAdd" onclick="switchPartnerTab('add')">เพิ่มแผนประกันใหม่</li>
+        </ul>
       </div>
+      <button class="btn-outline" style="width: 100%; border-radius: 6px; padding: 8px;" onclick="showMainView('user')">กลับหน้าหลัก</button>
+    </aside>
 
-      <div class="card">
-        <h3>📋 รายชื่อลูกค้าที่ขอใบเสนอราคาเข้าพอร์ตของคุณ</h3>
-        <div class="table-responsive">
-          <table>
+    <!-- Content Area -->
+    <main style="flex: 1;">
+      <!-- Tab 1: ภาพรวม & สมาชิก -->
+      <div id="partnerTabOverview">
+        <h2 style="margin-bottom: 20px;">แดชบอร์ดพาร์ทเนอร์ และจัดการสมาชิกในดูแล</h2>
+        <div class="dash-grid-4col" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px;">
+          <div class="card" style="text-align: center;"><div>แผนประกันในระบบ</div><h2 style="color: #1B4D3E; margin-top: 5px;">4 แผน</h2></div>
+          <div class="card" style="text-align: center;"><div>โควต้าแผนประกัน</div><h2 style="color: #CA8A04; margin-top: 5px;">5 แผน</h2></div>
+          <div class="card" style="text-align: center;"><div>สมาชิกในความดูแล</div><h2 style="color: #1B4D3E; margin-top: 5px;">1 คน</h2></div>
+          <div class="card" style="text-align: center;"><div>สิทธิ์การใช้งาน</div><h4 style="color: #16A34A; margin-top: 10px;">● พาร์ทเนอร์อนุมัติ</h4></div>
+        </div>
+
+        <div class="card" style="margin-bottom: 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h3>รายชื่อสมาชิกผู้ใช้งานในระบบ (Members)</h3>
+            <div>
+              <input type="text" placeholder="🔍 ค้นหาชื่อ, อีเมล..." style="padding: 6px 12px; border-radius: 4px; border: 1px solid #ccc;">
+              <button class="btn-primary btn-sm">+ สร้างไอดีสมาชิก</button>
+            </div>
+          </div>
+          <table style="width: 100%; border-collapse: collapse;">
             <thead>
-              <tr><th>#</th><th>ชื่อลูกค้า</th><th>เบอร์โทรศัพท์</th><th>อีเมล</th><th>แผนประกันที่สนใจ</th><th>วันที่ขอ</th></tr>
+              <tr style="background: #f8fafc; text-align: left;"><th>ไอดี</th><th>ชื่อ-นามสกุล</th><th>อีเมล</th><th>เบอร์โทรศัพท์</th><th>สถานะสมาชิก</th><th>จัดการ</th></tr>
             </thead>
-            <tbody id="agentLeadsTable"></tbody>
+            <tbody>
+              <tr><td>#101</td><td><b>นายสมชาย ใจดี</b></td><td>somchai@gmail.com</td><td>0812345678</td><td><span class="badge badge-info">ปกติ</span></td><td><button class="btn-outline btn-sm">แก้ไข</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h3>รายชื่อลูกค้าที่สนใจขอใบเสนอราคา (Leads)</h3>
+            <input type="text" placeholder="🔍 ค้นหาชื่อลูกค้า, เบอร์โทร..." style="padding: 6px 12px; border-radius: 4px; border: 1px solid #ccc;">
+          </div>
+          <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+              <tr style="background: #f8fafc; text-align: left;"><th>วันที่</th><th>ชื่อลูกค้า</th><th>เบอร์โทร</th><th>แผนประกันที่สนใจ</th><th>สถานะ</th></tr>
+            </thead>
+            <tbody id="partnerLeadsTable">
+              <tr><td colspan="5" style="text-align: center; color: #888; padding: 20px;">ไม่มีรายการ Lead</td></tr>
+            </tbody>
           </table>
         </div>
       </div>
-    </div>
-  </div>
 
-  <!-- VIEW 3: SUPER ADMIN DASHBOARD -->
-  <div class="container" id="view-admin" style="display: none;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-      <h2>📊 แดชบอร์ดภาพรวมระบบหลังบ้าน (Super Admin)</h2>
-      <button class="btn-outline btn-sm" onclick="loadAllData()">🔄 รีเฟรชข้อมูลด่วน</button>
-    </div>
-
-    <!-- Stat Cards -->
-    <div class="dash-grid-4col">
-      <div class="stat-card"><div>ผู้ใช้งานในระบบทั้งหมด</div><div class="val" id="adminTotalUsersCount">0 คน</div></div>
-      <div class="stat-card"><div>คำขอใบเสนอราคา (Leads)</div><div class="val" id="adminTotalLeads">0 รายการ</div></div>
-      <div class="stat-card"><div>คำขอผู้สนับสนุน (Sponsors)</div><div class="val" id="adminPendingSponsors">0 รายการ</div></div>
-      <div class="stat-card"><div>แผนประกันภัยทั้งหมด</div><div class="val" id="adminTotalPlans">0 แผน</div></div>
-    </div>
-
-    <!-- Charts Section -->
-    <div class="dash-grid-2col">
-      <div class="card">
-        <h3 style="font-size: 15px; margin-bottom: 12px;">📈 สัดส่วนแผนประกันภัยแยกตามประเภท</h3>
-        <div style="height: 220px; position: relative;"><canvas id="planCategoryChart"></canvas></div>
-      </div>
-      <div class="card">
-        <h3 style="font-size: 15px; margin-bottom: 12px;">👤 สัดส่วนผู้ใช้งานแยกตามบทบาท (Roles)</h3>
-        <div style="height: 220px; position: relative;"><canvas id="userRoleChart"></canvas></div>
-      </div>
-    </div>
-
-    <!-- Tables -->
-    <div class="card">
-      <h3>👥 จัดการผู้ใช้งานในระบบ & มอบสิทธิ์</h3>
-      <div class="table-responsive">
-        <table>
-          <thead>
-            <tr><th>ID</th><th>ชื่อ-นามสกุล</th><th>อีเมล</th><th>เบอร์โทร</th><th>สิทธิ์ (Role)</th><th>โควต้า</th><th>จัดการ</th></tr>
-          </thead>
-          <tbody id="adminUsersTable"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODALS -->
-
-  <!-- Modal เข้าสู่ระบบ / สมัครสมาชิก -->
-  <div id="authModalOverlay" class="modal-overlay">
-    <div class="modal">
-      <div class="modal-tabs">
-        <button class="modal-tab active" id="tabLoginBtn" onclick="switchAuthTab('login')">เข้าสู่ระบบ</button>
-        <button class="modal-tab" id="tabRegisterBtn" onclick="switchAuthTab('register')">สมัครสมาชิกใหม่</button>
+      <!-- Tab 2: จัดการแผนประกัน -->
+      <div id="partnerTabPlans" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+          <h2>รายการแผนประกันภัยในระบบ</h2>
+          <button class="btn-primary" onclick="switchPartnerTab('add')">+ เพิ่มแผนประกันใหม่</button>
+        </div>
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h3>ตารางจัดการแผนประกันภัย</h3>
+            <input type="text" placeholder="🔍 ค้นหาบริษัท, ชื่อแผน..." style="padding: 6px 12px; border-radius: 4px; border: 1px solid #ccc;">
+          </div>
+          <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+              <tr style="background: #f8fafc; text-align: left;"><th>ไอดี</th><th>บริษัท</th><th>ชื่อแผน</th><th>เบี้ยประกัน/ปี</th><th>ทุนประกัน</th><th>ประเภทซ่อม</th><th>สถานะ</th><th>จัดการ</th></tr>
+            </thead>
+            <tbody id="partnerPlansTable"></tbody>
+          </table>
+        </div>
       </div>
 
-      <!-- ฟอร์มเข้าสู่ระบบ -->
-      <form id="loginForm" onsubmit="handleLogin(event)">
-        <div class="filter-group">
-          <label>อีเมล / เบอร์โทรศัพท์ / Username</label>
-          <input type="text" id="loginUsername" required placeholder="เช่น admin, agent หรือ user">
+      <!-- Tab 3: เพิ่มแผนประกันใหม่ -->
+      <div id="partnerTabAdd" style="display: none;">
+        <h2 style="text-align: center; margin-bottom: 20px;">เพิ่มแผนประกันภัยใหม่ลงใน PaloInSure_lnwza007</h2>
+        <div class="card" style="max-width: 600px; margin: 0 auto;">
+          <form onsubmit="handleAddPlan(event)">
+            <div class="filter-group"><label>ประเภทประกัน</label><select id="addCategory"><option>ประกันรถยนต์ ชั้น 1</option><option>ประกันชีวิตแบบตลอดชีพ</option><option>ประกันอัคคีภัย</option></select></div>
+            <div class="filter-group"><label>บริษัทประกันภัย</label><input type="text" id="addCompany" placeholder="ระบุชื่อบริษัทประกันภัย" required></div>
+            <div class="filter-group"><label>ชื่อแผนประกัน</label><input type="text" id="addTitle" placeholder="ระบุชื่อแผนประกัน" required></div>
+            <div class="filter-group"><label>เบี้ยประกันภัยต่อปี (บาท)</label><input type="number" id="addPrice" placeholder="เช่น 15000" required></div>
+            <div class="filter-group"><label>ทุนประกัน (บาท)</label><input type="number" id="addCoverage" placeholder="เช่น 500000" required></div>
+            <div class="filter-group"><label>ประเภทการซ่อม / การชดเชย</label><select id="addRepair"><option>ซ่อมห้าง (ศูนย์)</option><option>ซ่อมอู่</option><option>ชดเชยเงินสดตามเงื่อนไข</option></select></div>
+            <button type="submit" class="btn-primary" style="width: 100%; margin-top: 15px; background: #1B4D3E;">บันทึกลงในเว็บไซต์</button>
+          </form>
         </div>
-        <div class="filter-group">
-          <label>รหัสผ่าน</label>
-          <input type="password" id="loginPassword" required placeholder="กรอกรหัสผ่าน">
-        </div>
-        <div style="background: #F3F4F6; padding: 8px 12px; border-radius: 6px; font-size: 12px; margin-bottom: 12px; color: var(--text-muted);">
-          <b>💡 บัญชีทดสอบด่วน:</b><br>
-          • Admin: <code>admin</code> / <code>admin</code><br>
-          • Agent: <code>agent</code> / <code>agent</code><br>
-          • User: <code>user</code> / <code>user</code>
-        </div>
-        <button type="submit" class="btn-primary" style="width: 100%; margin-top: 4px;">เข้าสู่ระบบ</button>
-        <button type="button" class="btn-text" style="width: 100%; margin-top: 8px;" onclick="closeAuthModal()">ยกเลิก</button>
-      </form>
-
-      <!-- ฟอร์มสมัครสมาชิก -->
-      <form id="registerForm" style="display: none;" onsubmit="handleRegister(event)">
-        <div class="filter-group">
-          <label>ชื่อ-นามสกุล</label>
-          <input type="text" id="regName" required placeholder="นายสมชาย ใจดี">
-        </div>
-        <div class="filter-group">
-          <label>อีเมล</label>
-          <input type="email" id="regEmail" required placeholder="somchai@email.com">
-        </div>
-        <div class="filter-group">
-          <label>เบอร์โทรศัพท์</label>
-          <input type="tel" id="regPhone" required placeholder="0812345678">
-        </div>
-        <div class="filter-group">
-          <label>รหัสผ่าน</label>
-          <input type="password" id="regPassword" required placeholder="สร้างรหัสผ่านอย่างน้อย 6 ตัวอักษร">
-        </div>
-        <div class="filter-group">
-          <label>สมัครในประเภท</label>
-          <select id="regRole">
-            <option value="user">สมาชิกทั่วไป (ค้นหาประกัน)</option>
-            <option value="agent">พาร์ทเนอร์ / ตัวแทนประกัน (Agent)</option>
-          </select>
-        </div>
-        <button type="submit" class="btn-primary" style="width: 100%; margin-top: 4px;">ยืนยันการสมัครสมาชิก</button>
-        <button type="button" class="btn-text" style="width: 100%; margin-top: 8px;" onclick="closeAuthModal()">ยกเลิก</button>
-      </form>
-    </div>
-  </div>
-
-  <!-- Modal ขอใบเสนอราคา -->
-  <div id="leadModalOverlay" class="modal-overlay">
-    <div class="modal">
-      <h3 style="margin-bottom: 8px;">ขอใบเสนอราคา</h3>
-      <p id="leadPlanTitleDisplay" style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;"></p>
-      <div class="filter-group"><label>ชื่อ-นามสกุล</label><input type="text" id="leadName" placeholder="นายสมชาย ใจดี"></div>
-      <div class="filter-group"><label>เบอร์โทรศัพท์</label><input type="tel" id="leadPhone" placeholder="0812345678"></div>
-      <div class="filter-group"><label>อีเมลรับใบเสนอราคา</label><input type="email" id="leadEmail" placeholder="somchai@email.com"></div>
-      <button class="btn-primary" style="width: 100%; margin-top: 12px;" onclick="submitLead()">ยืนยันส่งข้อมูล</button>
-      <button type="button" class="btn-text" style="width: 100%; margin-top: 8px;" onclick="closeLeadModal()">ยกเลิก</button>
-    </div>
-  </div>
-
-  <!-- Modal แก้ไขผู้ใช้งาน -->
-  <div id="editUserModalOverlay" class="modal-overlay">
-    <div class="modal">
-      <h3 style="margin-bottom: 16px;">แก้ไขข้อมูลผู้ใช้งาน</h3>
-      <input type="hidden" id="editUserId">
-      <div class="filter-group"><label>ชื่อ-นามสกุล</label><input type="text" id="editUserName"></div>
-      <div class="filter-group"><label>อีเมล</label><input type="email" id="editUserEmail"></div>
-      <div class="filter-group"><label>เบอร์โทรศัพท์</label><input type="tel" id="editUserPhone"></div>
-      <div class="filter-group">
-        <label>ระดับสิทธิ์ (Role)</label>
-        <select id="editUserRole">
-          <option value="user">User (สมาชิกทั่วไป)</option>
-          <option value="agent">Agent / Partner (พาร์ทเนอร์)</option>
-          <option value="admin">Super Admin (ผู้ดูแลระบบ)</option>
-        </select>
       </div>
-      <div class="filter-group"><label>โควต้าแผนประกัน</label><input type="number" id="editUserQuota"></div>
-      <button class="btn-primary" style="width: 100%;" onclick="saveEditUser()">บันทึกการแก้ไขลง Database</button>
-      <button type="button" class="btn-text" style="width: 100%; margin-top: 8px;" onclick="closeEditUserModal()">ยกเลิก</button>
-    </div>
+    </main>
   </div>
 
-  <!-- Modal คำขอพาร์ทเนอร์ -->
-  <div id="sponsorModalOverlay" class="modal-overlay">
-    <div class="modal">
-      <h3 style="margin-bottom: 16px;">ยื่นคำขอเป็นผู้สนับสนุน / พาร์ทเนอร์</h3>
-      <div class="filter-group"><label>ชื่อบริษัท / หน่วยงาน</label><input type="text" id="sponsorCompany" placeholder="บริษัท เมืองไทยประกันชีวิต จำกัด"></div>
-      <div class="filter-group"><label>ชื่อผู้ติดต่อ</label><input type="text" id="sponsorContact" placeholder="คุณสมชาย"></div>
-      <div class="filter-group"><label>เบอร์โทรศัพท์ติดต่อ</label><input type="tel" id="sponsorPhone" placeholder="0812345678"></div>
-      <button class="btn-primary" style="width: 100%; margin-top: 12px;" onclick="submitSponsorRequest()">ส่งคำขอสปอนเซอร์</button>
-      <button type="button" class="btn-text" style="width: 100%; margin-top: 8px;" onclick="closeSponsorModal()">ยกเลิก</button>
-    </div>
-  </div>
-
-  <!-- Modal เปรียบเทียบ -->
-  <div id="compareModalOverlay" class="modal-overlay">
-    <div class="modal modal-lg">
-      <h3 style="margin-bottom: 16px;">⚖️ ตารางเปรียบเทียบแผนประกันภัย</h3>
-      <div class="table-responsive">
-        <table>
-          <thead><tr id="compareTableHeader"></tr></thead>
-          <tbody id="compareTableBody"></tbody>
-        </table>
+  <!-- ==================== VIEW 2: SUPER ADMIN (มี Sidebar ซ้าย) ==================== -->
+  <div class="container-fluid" id="view-admin" style="display: none; gap: 20px; padding: 20px;">
+    <!-- Sidebar -->
+    <aside class="sidebar-menu" style="width: 220px; flex-shrink: 0; background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #e5e7eb; display: flex; flex-direction: column; justify-content: space-between; min-height: 80vh;">
+      <div>
+        <h4 style="color: #1B4D3E; margin-bottom: 15px; font-size: 16px;">Super Admin</h4>
+        <ul style="list-style: none; padding: 0; margin: 0;">
+          <li class="sidebar-item" id="sideAdminOverview" onclick="switchAdminTab('overview')">ภาพรวม & สถิติ</li>
+          <li class="sidebar-item active" id="sideAdminUsers" onclick="switchAdminTab('users')">จัดการผู้ใช้งาน & มอบสิทธิ์</li>
+          <li class="sidebar-item" id="sideAdminSponsors" onclick="switchAdminTab('sponsors')">คำขอผู้สนับสนุน / พาร์ทเนอร์</li>
+          <li class="sidebar-item" id="sideAdminApprovals" onclick="switchAdminTab('approvals')">อนุมัติแผนประกันภัย <span class="badge badge-warning" id="pendingBadgeCount">1</span></li>
+        </ul>
       </div>
-      <button class="btn-outline" style="width: 100%; margin-top: 16px;" onclick="closeCompareModal()">ปิดหน้าต่างเปรียบเทียบ</button>
-    </div>
+      <button class="btn-outline" style="width: 100%; border-radius: 6px; padding: 8px;" onclick="showMainView('user')">กลับหน้าหลัก</button>
+    </aside>
+
+    <!-- Content Area -->
+    <main style="flex: 1;">
+      <!-- Tab 1: ภาพรวม -->
+      <div id="adminTabOverview" style="display: none;">
+        <h2>ภาพรวม & สถิติระบบหลังบ้าน</h2>
+        <div class="dash-grid-2col" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
+          <div class="card"><h3>สัดส่วนแผนประกันภัย</h3><canvas id="chart1"></canvas></div>
+          <div class="card"><h3>สัดส่วนบทบาทผู้ใช้งาน</h3><canvas id="chart2"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Tab 2: จัดการผู้ใช้งาน -->
+      <div id="adminTabUsers">
+        <h2 style="margin-bottom: 20px;">จัดการผู้ใช้งาน และกำหนดสิทธิ์พาร์ทเนอร์</h2>
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h3>รายชื่อผู้ใช้งานทั้งหมดใน Database</h3>
+            <div>
+              <input type="text" placeholder="🔍 ค้นหาชื่อ, อีเมล..." style="padding: 6px 12px; border-radius: 4px; border: 1px solid #ccc;">
+              <button class="btn-primary btn-sm" style="background: #1B4D3E;">+ สร้างไอดีผู้ใช้/พาร์ทเนอร์</button>
+            </div>
+          </div>
+          <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+              <tr style="background: #f8fafc; text-align: left;"><th>ไอดี</th><th>ชื่อผู้ใช้</th><th>อีเมล</th><th>เบอร์โทร</th><th>ระดับสิทธิ์</th><th>โควต้า</th><th>สถานะ</th><th>จัดการ</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>#101</td><td><b>นายสมชาย ใจดี</b></td><td>somchai@gmail.com</td><td>0812345678</td><td><span class="badge badge-info">User</span></td><td>5 แผน</td><td><span class="badge badge-success">active</span></td><td><button class="btn-outline btn-sm">แก้ไข</button></td></tr>
+              <tr><td>#102</td><td><b>พาร์ทเนอร์ ตัวแทนประกัน</b></td><td>agent@insure.com</td><td>0898765432</td><td><span class="badge badge-warning">Partner</span></td><td>10 แผน</td><td><span class="badge badge-success">active</span></td><td><button class="btn-outline btn-sm">แก้ไข</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Tab 3: คำขอผู้สนับสนุน -->
+      <div id="adminTabSponsors" style="display: none;">
+        <h2 style="margin-bottom: 20px;">จัดการคำขอผู้สนับสนุน (Sponsor Requests)</h2>
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h3>รายการคำขอเป็นผู้สนับสนุน</h3>
+            <input type="text" placeholder="🔍 ค้นหาบริษัท, ผู้ติดต่อ..." style="padding: 6px 12px; border-radius: 4px; border: 1px solid #ccc;">
+          </div>
+          <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+              <tr style="background: #f8fafc; text-align: left;"><th>วันที่</th><th>บริษัท</th><th>ผู้ติดต่อ</th><th>เบอร์โทร</th><th>ข้อความ</th><th>สถานะ</th><th>การอนุมัติ</th></tr>
+            </thead>
+            <tbody>
+              <tr><td colspan="7" style="text-align: center; color: #888; padding: 20px;">ไม่มีคำขอผู้สนับสนุน</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Tab 4: อนุมัติแผนประกันภัย -->
+      <div id="adminTabApprovals" style="display: none;">
+        <h2 style="margin-bottom: 20px;">อนุมัติแผนประกันภัยใหม่ (Pending Approvals)</h2>
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h3>รายการแผนประกันที่รอการอนุมัติก่อนแสดงบนเว็บไซต์</h3>
+            <input type="text" placeholder="🔍 ค้นหาบริษัท, ชื่อแผน..." style="padding: 6px 12px; border-radius: 4px; border: 1px solid #ccc;">
+          </div>
+          <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+              <tr style="background: #f8fafc; text-align: left;"><th>ไอดี</th><th>บริษัท</th><th>ชื่อแผน</th><th>ประเภทประกัน</th><th>เบี้ยประกัน/ปี</th><th>ทุนประกัน</th><th>ประเภทการซ่อม</th><th>สถานะ</th><th>จัดการอนุมัติ</th></tr>
+            </thead>
+            <tbody id="adminApprovalsTable">
+              <tr>
+                <td>#4</td><td><b>เมืองไทยประกันภัย</b></td><td>ประกันรถยนต์ ชั้น 1 สบายใจ</td>
+                <td><span class="badge badge-info">ประกันรถยนต์ ชั้น 1</span></td>
+                <td><b>12,900 บาท</b></td><td>400,000 บาท</td><td>ซ่อมอู่</td>
+                <td><span class="badge badge-warning">รอแอดมินอนุมัติ</span></td>
+                <td>
+                  <button class="btn-primary btn-sm" style="background: #16A34A;" onclick="approvePlan(4)">✓ อนุมัติ</button>
+                  <button class="btn-danger btn-sm" onclick="rejectPlan(4)">✕ ปฏิเสธ</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- VIEW 3: USER FRONTEND VIEW -->
+  <div class="container" id="view-user" style="display: none; padding: 20px;">
+    <h2>หน้าหลักสำหรับผู้ใช้ทั่วไป (User Marketplace)</h2>
+    <button class="btn-primary" style="margin-top: 10px;" onclick="showMainView('partner')">กลับเข้าหน้า Partner Management</button>
   </div>
 
   <script src="script.js"></script>
