@@ -471,7 +471,7 @@
     let rawSponsors = [];
     let compareList = [];
     let currentSelectedPlanTitle = '';
-    let currentUser = JSON.parse(localStorage.getItem('currentUser')) || { id: 99, name: "Admin User", role: "admin" };
+    let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
 
     let categoryChartInstance = null;
     let roleChartInstance = null;
